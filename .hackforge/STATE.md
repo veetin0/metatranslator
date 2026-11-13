@@ -1,11 +1,11 @@
 # State
-- Phase: 1 understand → 3 design (Harness team run: plan only; stop at plan checkpoint)
+- Phase: 4 decide → plan checkpoint (Harness team run: waiting for the lead to accept PLAN.md)
 - Profile: lean (plan: pro → lean per profiles.md; fable_ok false) · Models: research sonnet / architect opus / judge sonnet / build sonnet / craft sonnet / verify haiku / advisor opus
-- Limits: ≤2 local agents at once; research + architects dispatched to crew (3 ready) to save lead usage. Loop max 12 iterations, target 8.5. Verify: quick per iteration, blind judge final only.
-- Deadline: 2026-11-15T10:00+02:00 · Started kickoff 2026-11-13
-- Current milestone / wave: kickoff
-- Done: INVENTORY, DIRECTIVES, BRIEF, RULES
-- Next: crew research (platform, sign recognition, prior art/possibilities) → 2 architects → judge → DECISION, PLAN
-- Best metric vs baseline: — · Latest mock score: —
-- Escalations / de-escalations: none
-- Risks & open questions: camera access path on Ray-Ban Display (web app vs DAT); sign recognition accuracy; device availability at judging (see BRIEF Q1–Q4)
+- Limits: ≤2 local agents at once; research + architects ran on crew. Loop max 12 iterations, target 8.5. Verify: quick per iteration, blind judge final only.
+- Deadline: 2026-11-15T10:00+02:00 · Kickoff 2026-11-13 ~18:30–20:50 EET · ~37 h left at plan time · Feature freeze Sun 02:30
+- Current milestone / wave: none (M0 spike next)
+- Done: INVENTORY, DIRECTIVES, BRIEF, RULES, research (platform, sign-recognition, prior-art), POSSIBILITIES, options (safe-winner, ambitious), judge panel, OPTIONS, DECISION, PLAN
+- Next: lead accepts plan → build (CONTRACTS.md, contracts/M*.json, DESIGN.md, gate.sh) → M0 spike (needs-spike → advisor first)
+- Best metric vs baseline: — · Latest mock score: kickoff judge 7.0 weighted (option A + grafts)
+- Escalations / de-escalations: Kickoff "expected < 6" rule not triggered: judge's expected row (5.6) multiplies already risk-discounted J scores by feasibility, double-counting; used the 7.0 weighted average. No extra lateral round.
+- Risks & open questions: camera + DAT Display same session (M0); phone joins glasses Wi-Fi so phone↔laptop must use USB tethering (M0 check); DAT-compatible Android phone + Android Studio on team?; paid Apple team?; device reservation for judging; pitch length / video required; glasses-camera accuracy domain shift; mediapipe + opencv-python not yet installed.
