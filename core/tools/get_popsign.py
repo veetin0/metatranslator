@@ -217,7 +217,7 @@ def _walk_one(sign: str, split: str) -> tuple[str, str, int, list[dict]]:
     return sign, split, total, members
 
 
-def refresh_manifest(rows: list[dict], manifest_path: Path, workers: int) -> int:
+def refresh_manifest(rows: list[dict], manifest_path: Path, workers: int, partial: bool = False) -> int:
     signs = sorted({r["popsign_name"]: r["gloss"] for r in popsign_rows(rows)}.items())
     jobs = [(s, sp) for s, _ in signs for sp in SPLITS]
     print(f"walking {len(jobs)} tars ({len(signs)} signs x {len(SPLITS)} splits) with {workers} workers ...", flush=True)
@@ -261,6 +261,9 @@ def refresh_manifest(rows: list[dict], manifest_path: Path, workers: int) -> int
         clips.sort(key=lambda c: (c["split"], c["member"]))
         out["signs"][s] = {"gloss": gloss, "popsign_name": s, "source_url": page_url(s), "tars": tars,
                            "fetched": fetched, "clips": clips}
+    if partial and manifest_path.exists():  # --signs refresh: keep the other signs' entries
+        old = json.loads(manifest_path.read_text(encoding="utf-8")).get("signs", {})
+        out["signs"] = {k: out["signs"].get(k, old.get(k)) for k in sorted(set(old) | set(out["signs"]))}
     write_manifest(manifest_path, out)
     print(f"wrote {manifest_path} ({manifest_path.stat().st_size / 1e6:.2f} MB)")
     return 0
@@ -526,7 +529,7 @@ def main(argv=None) -> int:
     if args.refresh_manifest:
         if signs:
             rows = [r for r in rows if r["source"] != "popsign" or r["gloss"] in signs or r["popsign_name"] in signs]
-        return refresh_manifest(rows, args.manifest, args.workers or 12)
+        return refresh_manifest(rows, args.manifest, args.workers or 12, partial=bool(signs))
 
     if not args.manifest.exists():
         print(f"{args.manifest} missing: run --refresh-manifest once (needs network)", file=sys.stderr)
