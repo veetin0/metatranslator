@@ -212,7 +212,7 @@ class RealModel(Adapter):
     Only used when signer_core.model exposes such a class; otherwise `--model auto` falls back to the baseline.
     """
 
-    CANDIDATES = ("KnnClassifier", "KnnModel", "SignClassifier", "Classifier", "Model")
+    CANDIDATES = ("KNNClassifier", "KnnClassifier", "KnnModel", "SignClassifier", "Classifier", "Model")
 
     def __init__(self, cls):
         self.cls, self.name = cls, f"signer_core.model.{cls.__name__}"
