@@ -14,6 +14,7 @@ Team instructions. They override HackForge defaults, never an official rule.
 10. Build on iOS: paid Apple developer team + iPhone on iOS 17.2+. "English sign language" = ASL. No Kaggle account, so no Kaggle `asl-signs` (source: lead, 2026-11-13).
 11. Meta's references for the build: Display Simulator, DAT getting-started docs, Web Apps docs, and the repos meta-wearables-webapp, meta-wearables-dat-ios, meta-wearables-dat-android. Pass them to every agent and crew member. Meta's plugins and docs MCP may be installed (source: lead, 2026-11-13).
 12. The Ray-Ban Display is available in 2-hour reservations: plan hardware work into booked slots and develop with Mock Device Kit + simulator between them. Pitch is 2 minutes, not in focus yet (source: lead, 2026-11-13).
+13. The lead's plan usage is low: give the remaining build, verify and research work to the crew. The lead's Claude keeps to merges, local-only data jobs and hardware steps (source: lead, [run] 2026-11-13).
 
 ## Lessons (advisory)
 - No saved lessons yet.
