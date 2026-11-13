@@ -23,6 +23,8 @@ renders/cache/
 data/popsign/raw/
 # raw landmark clips stay on the lead's Mac (65 MB > the team server's 40 MB); the crew uses data/popsign/features.npz
 data/popsign/landmarks/
+# Teach-a-sign reps (a signer's own landmarks): stay on this machine
+data/taught/
 *.mp4
 !video/out/demo.mp4
 # Build output
