@@ -45,6 +45,54 @@ Source: https://wearables.developer.meta.com/docs/develop/webapps , /webapps/bui
   - How phone TTS audio is routed to the glasses.
   - Web App background/timeout behaviour.
 
+## 4. Meta's reference glasses app: DAT iOS `samples/BirdSpotter`
+Source: https://github.com/meta/meta-wearables-dat-ios/tree/main/samples/BirdSpotter (README, Info.plist, `Data/Dat/*`, `Data/Audio/SystemSpokenOutput.swift`, `Features/Identify/RealtimeViewModel.swift`, CHANGELOG). Two of those files were only partly read, about 39K of 115K characters.
+
+**What the sample does**
+- Bird identification is **simulated** by a scripted `PresetDemoDirector`, with no ML, server or LLM. The sample shows app structure, not computer vision.
+- The video half of its camera stream is never looked at; it exists to wake the sensor and carry the glasses mic.
+
+**Structure**
+- `AppContainer` is the composition root.
+- `Data/Dat/` holds the session, camera, display, input, motion, speech, voice and mock-device repositories.
+- `RealtimeViewModel` routes cards to the glasses only while `isDisplayAvailable && isGlassesSessionLive`.
+
+**Camera + display in one session**
+- `activeCamera` and `activeDisplay` sit on the same `DeviceSession`, and the display attaches once the stream reaches `.streaming`. This is inferred from the code; we haven't seen it on hardware.
+- Stream settings: `StreamConfiguration(videoCodec: .hvc1, audioCodec: .pcm 16 kHz mono, resolution: .low, frameRate: 7)`.
+  - `.hvc1` keeps flowing when the app is backgrounded; `.raw` pauses.
+  - Medium = 504x896 and high = 720x1280, but `.low` dimensions aren't stated.
+  - Frames and still photos compete for the same sensor.
+
+**Display**
+- `MWDATDisplay` `FlexBox{Text(.heading), Text(.meta), Image, Text(.body)}.padding(16)` sent with `sendThroughActiveDisplay`.
+- The canvas is 600×600, and every send replaces the whole screen.
+
+**Audio**
+- `AVSpeechSynthesizer` (en-US) speaks only when the audio route includes Bluetooth A2DP/HFP/LE. The glasses are the phone's Bluetooth speaker; there is no DAT speaker API.
+- The glasses mic arrives on the camera stream (Meta AI `.microphone` permission). `FailoverAudioSource` falls back to the phone mic.
+- `MWDATSpeech` does on-device speech-to-text.
+
+**Experimental features**
+- Inputs, Motion, Speech, Photo, Camera audio and Voice invocation are Experimental: apps that use them can't be published yet.
+- Camera streaming and Display are not experimental.
+
+**Setup**
+- iOS 17.2+ (BirdSpotter README says 18+). Swift Package `https://github.com/facebook/meta-wearables-dat-ios`, SDK 1.0.1.
+- Info.plist `MWDAT` dict: `MetaAppID`=0, `ClientToken`=0 in Developer Mode, `TeamID`, `AppLinkURLScheme`, analytics opt-out. `UIBackgroundModes` and `com.meta.ar.wearable` accessory protocol.
+- Change the bundle ID to your team's.
+- Whether a free personal team gets frames isn't stated. A 2nd-hand report says it doesn't (platform.md). M0 checks this.
+
+**Other samples**
+- `CameraAccess` actually consumes video frames: live preview, photos, recording.
+- `DisplayAccess` sends interactive display views. An iOS Simulator build can stream them to the Chrome Display Simulator; a physical iPhone can't.
+- Mock Device Kit supports `metaRayBanDisplay` since 1.0.0. This corrects platform.md's "no display mock".
+
+**For Signer**
+- Copy BirdSpotter's structure and display/TTS wiring.
+- Take frame handling from `CameraAccess`: take the `VideoFrame`'s `CMSampleBuffer` and send it to the core.
+- On-device Apple Vision hand pose is possible later but not planned.
+
 ## 3. Datasets: sign language → English
 "English sign language" here means **ASL (American Sign Language) glossed into English**, the language with the open datasets. BSL (British) data exists (BOBSL, BSL-1K), but it is BBC/Oxford-licensed, research-only and video-only, so not used. FinSL is dropped from the plan.
 

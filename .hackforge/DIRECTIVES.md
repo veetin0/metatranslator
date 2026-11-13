@@ -10,6 +10,7 @@ Team instructions. They override HackForge defaults, never an official rule.
 6. allow / forbid / stack_preferences: none set (source: hackforge.yaml).
 7. Follow Meta's developer docs for how the app gets onto the glasses (Web App on the display); use Meta's display simulators so development doesn't need glasses and the web app transfers easily to the device (source: lead, [run] 2026-11-13).
 8. English only: sign-language datasets and output in English (ASL → English); FinSL dropped (source: lead, [run] 2026-11-13).
+9. Use Meta's DAT iOS sample BirdSpotter as the example of a glasses app (source: lead, [run] 2026-11-13).
 
 ## Lessons (advisory)
 - No saved lessons yet.

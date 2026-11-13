@@ -18,19 +18,35 @@
 - Not an interpreter: "Everyday phrases only. For medical, legal and exams, book an interpreter."
 
 ## Stack
-Changed 2026-11-13 by the lead after reading Meta's docs: the lens UI is a **Web App**, which can be developed without glasses in Meta's simulator.
+Revision 2 (2026-11-13, after the lead's pointer to Meta's DAT iOS sample `samples/BirdSpotter`):
+- **The glasses app is a native phone app on DAT 1.0.1, following BirdSpotter's structure.** BirdSpotter is Meta's reference "glasses app".
+- It shows that one `DeviceSession` can hold the camera stream and the display at once, sending `FlexBox`/`Text` cards with `sendThroughActiveDisplay`.
+  - This is inferred from its code: `activeCamera` + `activeDisplay` on the same session, and the display attaches once the stream reaches `.streaming`. M0 still confirms it on hardware.
+- It plays TTS on the phone (`AVSpeechSynthesizer`), which reaches the glasses because they are the Bluetooth audio output.
+- It needs no public tunnel, and caption text never leaves the local network, which is better for R3.
 
-- **Glasses: "Signer" Web App = the lens HUD.** The real app on the glasses.
-  - A 600×600 HTML/JS page (Meta's starter kit + UI Toolkit, or plain HTML if it fits the < 300 KB budget).
-  - It receives captions over WSS from the core and speaks them with `speechSynthesis`, which plays through the glasses speaker.
-  - It is served on a public HTTPS URL and installed in the Meta AI app in Developer Mode (Connect Web App, or the `fb-viewapp://` QR).
-  - It is developed and QA'd in the Meta Ray-Ban Display Simulator Chrome extension, with a webcam background, so most of the team never needs glasses.
-- **Phone: thin Android Kotlin app on DAT 1.0.1, camera only.**
-  - Streams the camera at `.medium` 504x896 @15 fps to the core, plus lifecycle/device-state UI and reply STT (phone mic).
-  - Web Apps get no camera, so DAT is still the only path for camera frames.
-  - Mock Device Kit `setCameraFeed(video)` lets us test it without glasses.
-  - **DAT Display captions are now the fallback**, used if the Web App can't stay open while DAT streams, or if its latency is bad.
-  - iOS only if a paid Apple team is confirmed *and* Android fails M0. If neither works → Fallback B, which weakens R2.
+So:
+- **Glasses + phone: "Signer" native app on DAT 1.0.1.** One session does three things:
+  - **Camera:** streams to the core, `.raw` or `.hvc1` at medium 504x896 (BirdSpotter only used `.low` 7 fps, so the higher rate is M0's job to prove).
+  - **Display:** DAT Display caption cards, 600×600. Each send replaces the screen, so sends are throttled.
+  - **Speech:** phone TTS over Bluetooth to the glasses speaker.
+  - It also has lifecycle/device-state UI and reply STT (phone mic; MWDATSpeech is experimental).
+- **Copy BirdSpotter's structure:**
+  - Repositories for session, camera, display and mock device.
+  - An `AppContainer` that wires everything together.
+  - A view-model that sends cards to the glasses only while the session is live.
+  - Opt out of analytics in Info.plist.
+- **Platform: iOS (Swift) if a paid Apple team is confirmed, else Android (Kotlin, matching samples).**
+  - iOS is recommended because the lead's Mac has Xcode and the reference sample is iOS.
+  - A free Apple ID build connects but receives no frames (2nd-hand report, research/platform.md), so M0 decides.
+  - Only one platform is built.
+- **Without glasses:**
+  - Mock Device Kit with `metaRayBanDisplay` (supported since DAT 1.0.0): an in-app preview, or an iOS Simulator build that streams the display to the Chrome "Meta Ray-Ban Display Simulator".
+  - A mock camera fed from a video file. On Android this is `setCameraFeed(video)`; on iOS the equivalent is checked in M0.
+- **Web App = fallback and glasses-free demo surface.**
+  - A 600×600 HTML page with WSS + `speechSynthesis`, installed by HTTPS URL / `fb-viewapp://` QR.
+  - Used only if DAT Display can't run alongside the camera.
+  - Also the quickest browser preview of the lens for the team (Display Simulator extension). Its HTTPS tunnel is only needed in that case.
 - **Signer Core: Python on a team laptop** — FastAPI + WebSocket relay, MediaPipe Hands + Pose (+ Face blendshapes for the question flag), shoulder-normalised features + hand joint angles, segmenter, kNN/DTW baseline → small GRU if it wins on held-out signer, gloss→English (deterministic templates; Claude Haiku 4.5 fluent mode on gloss text only, with validator), eval harness (leave-one-signer-out). Deps: `mediapipe`, `opencv-python`, `fastapi`, `uvicorn`, `numpy`, `torch` (have), `anthropic`.
 - **Signer Card: static web page** served by the core (QR to open).
 - **Recognition data:**
@@ -39,8 +55,8 @@ Changed 2026-11-13 by the lead after reading Meta's docs: the lens UI is a **Web
   - ASL Citizen (non-commercial) as an optional held-out test on unseen Deaf signers.
 - **Network:**
   - Phone ↔ laptop over **USB tethering**. The phone joins the glasses' Wi-Fi for streaming, so it can't also run a hotspot. Verified in M0.
-  - The Web App reaches the core through a **public HTTPS/WSS tunnel** (cloudflared) to the laptop. Only caption text and confidence go through the tunnel; frames never do.
-  - The static Web App can also sit on Vercel/GitHub Pages and open a WSS connection to the tunnel.
+  - The core sends captions back to the phone app over the same USB link; the phone renders them with DAT Display + TTS.
+  - Only on the Web App fallback: a public HTTPS/WSS tunnel (cloudflared) carries caption text only, never frames.
 
 ## Data practice (R3)
 Frames: glasses → phone → laptop over USB/LAN only, RAM only, dropped after landmark extraction, never written to disk, never sent to cloud. Only gloss text goes to Claude (fluent mode; off = deterministic). TTS/STT on-device. Logs: counts and latencies only. No face ID, no signer profile. Teach-mode prototypes stay on the laptop under a label; one-tap delete. Consent required before the camera session even opens; consent resets on STOPPED; auto-stop after 2 min idle; card Stop is the guaranteed path.
@@ -49,9 +65,7 @@ Frames: glasses → phone → laptop over USB/LAN only, RAM only, dropped after 
 The live demo uses the **glasses camera**. Webcam / phone camera are for development, data recording, eval and the backup video only. Fallback B (phone camera, labelled on stage) is a last resort, not the plan.
 
 ## Fallbacks (decided by end of M0)
-- A:
-  - **If the Web App can't run while DAT streams, or the tunnel is too slow:** captions move to DAT Display, rendered by the phone app, and TTS moves to Android TTS.
-  - **If neither display works alongside the camera:** the Web App runs on its own for display and TTS, and the camera comes from Fallback B.
+- A: DAT Display can't run alongside the camera at the needed fps → captions go to the Signer Web App on the glasses (over WSS through the tunnel). The phone keeps the camera and TTS.
 - B: no glasses frames (entitlement, freeze, no device) → phone back camera / webcam into the same core, captions still on glasses; labelled honestly.
 - C: no Display device → Ray-Ban Meta Gen 2, audio-only TTS.
 
