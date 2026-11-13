@@ -4,7 +4,8 @@ without a camera or a trained model. Replay is refused while the session is off 
 
     core/.venv/bin/python hud-web/tools/replay_core.py [--port 8000]
     curl -X POST localhost:8000/dev/replay            # all events, 1.5 s apart
-    curl -X POST 'localhost:8000/dev/replay?only=c1'  # one caption id
+    curl -X POST 'localhost:8000/dev/replay?only=c1'  # one caption id (and its retract, if any)
+    curl -X POST 'localhost:8000/dev/replay?only=c2&types=caption'  # the caption without its retract
 """
 import argparse
 import asyncio
@@ -28,11 +29,12 @@ app = create_app()
 relay = app.state.relay
 
 
-async def replay(only: str | None = None, gap_s: float = 1.5):
+async def replay(only: str | None = None, types: str = "caption,retract,reply,stats", gap_s: float = 1.5):
     if not relay.session.is_on:
         raise HTTPException(409, {"error": "consent_required"})
     events = [json.loads(line) for line in EVENTS.read_text().splitlines() if line.strip()]
-    events = [e for e in events if e["type"] in ("caption", "retract", "reply", "stats")]
+    keep = set(types.split(",")) & {"caption", "retract", "reply", "stats"}
+    events = [e for e in events if e["type"] in keep]
     if only:
         events = [e for e in events if e.get("id") == only]
     for i, ev in enumerate(events):

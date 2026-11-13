@@ -26,12 +26,16 @@ function paint() {
 
 function apply(ev) {
   s = reduce(s, ev);
+  paint(); // before speech: a TTS failure must never cost the caption
   const say = speakText(ev);
   if (say && "speechSynthesis" in window) {
-    speechSynthesis.cancel();
-    speechSynthesis.speak(new SpeechSynthesisUtterance(say));
+    try {
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(say));
+    } catch {
+      /* no voice on this device; the caption is already shown */
+    }
   }
-  paint();
 }
 
 function send(msg) {
