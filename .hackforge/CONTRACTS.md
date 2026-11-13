@@ -71,6 +71,27 @@ Xcode ≥ 26.4, iOS 17.2+, Swift, DAT 1.0.1 via SwiftPM (`MWDATCore`, `MWDATCame
 ## 10. Python package
 `core/pyproject.toml` (M0.3): package `signer_core`, Python ≥ 3.10 (mediapipe wheels decide: use a `core/.venv` with 3.12 if 3.13 has none), deps `mediapipe opencv-python fastapi uvicorn[standard] numpy httpx anthropic`, extra `dev` = `pytest`. Install: `python -m pip install -e "core[dev]"`. Run: `python -m signer_core.relay` (serves on `SIGNER_PORT`). Tests: `python -m pytest core/tests -q` — tests never need a camera, glasses or network (use `contracts/events.example.jsonl` and generated landmark arrays).
 
+## 12. Clip-translate path (contract change 2026-11-13, lead; challenge/prompts/OBJECTIVE.md, directive 14)
+The demo path is now **record a clip → upload → translate → text + audio**. The WS stream (§2–4) stays as a fallback, unchanged.
+Flow: Neural Band pinch on the focused **Record** button in the glasses Web App → `POST /capture/start {"by":"hud"}` → core broadcasts `{"type":"capture","state":"recording","capture_id":"k1","ts":<ms>}` → the iOS app (DAT camera) records an MP4 → pinch **Stop** → `POST /capture/stop {"by":"hud"}` → broadcast `capture` `processing` → the iOS app POSTs the clip to `/translate` with `capture_id` → the core broadcasts the `caption` (with `audio_url`) and `capture` `idle`. A Web App has no camera (Meta FAQ), so the clip always comes from the iOS app, or in dev from a laptop webcam page / a file.
+
+| Method + path | Request | Response |
+|---|---|---|
+| `POST /translate` | multipart: `video` (mp4/mov/webm, ≤ 30 s, ≤ 50 MB), optional `capture_id`, optional `speak` (default `true`) | `Translation` below; 413 too big, 415 undecodable |
+| `POST /capture/start` | `{"by":"hud"|"card"|"app"}` | `{"capture_id":"k1","state":"recording"}`; also starts the consent session if it is off |
+| `POST /capture/stop` | `{"by":"hud"|"card"|"app"}` | `{"capture_id":"k1","state":"processing"}` |
+| `GET /audio/{id}.wav` | — | `audio/wav` (kept in RAM, last 20) |
+
+`Translation` = `{"id":"c42","glosses":[{"gloss":"HELLO","confidence":0.91,"tier":"confirmed","t0_ms":0,"t1_ms":900}],"rejected":[{"gloss":"WATER","confidence":0.31}],"text":"Hello!","tier":"confirmed"|"unsure"|"none","alternatives":[…as §4],"mode":"gemini"|"template","audio_url":"/audio/c42.wav"|null,"tts":"gemini"|"none","timings_ms":{"decode":0,"landmarks":0,"classify":0,"translate":0,"tts":0,"total":0}}`. The same object is broadcast on `/ws/events` as a `caption` event (§4 fields plus `glosses`, `rejected`, `audio_url`, `tts`; `type:"caption"`).
+
+Rules:
+- Only `confirmed` and `unsure` glosses go to Gemini; `none`-tier ones go to `rejected` and are never sent. The prompt forbids adding content words that aren't in the glosses; the reply is checked against an allowlist built from the glosses' English and function words, and falls back to the template on failure. Unsure glosses are marked so the text can show them as uncertain. All rejected → `text:"Didn't catch that"`, tier `none`, no audio.
+- Text: Gemini Flash, `SIGNER_GEMINI_MODEL` (confirm the current id on the AI Studio models page; the crew found `gemini-3.8-flash`). TTS: `SIGNER_TTS_MODEL` (found `gemini-3.8-flash-tts`), WAV 24 kHz mono. Key `GEMINI_API_KEY`. No key or network → `mode:"template"`, `tts:"none"`, and clients speak with `speechSynthesis`. Only gloss text is ever sent to Google, never video or landmarks.
+- Video: `cv2.VideoCapture` on a temp file deleted right after decoding; frames → `signer_core.vision` Holistic → `signer_core.model` → segments. Nothing is stored.
+- Model interface (M2.2 owns it): `signer_core.model.registry.load(name=os.environ.get("SIGNER_MODEL","knn"))` returns an object with `predict(features) -> list[tuple[str, float]]` (the interface `recognizer.classify` already uses); `signer_core.model.recognize_clip(xyz (T,75,3), t_ms (T,), classifier) -> list[Prediction]` segments a whole clip. Until it lands, the backend uses `Recognizer.push` + `flush`.
+- Vocabulary: cut to ≤ 20 signs + REST by `SIGNER_VOCAB` (comma list, M2.2 picks it from `eval/results/m1.json`); `data/VOCAB.md` is updated with the final list.
+- Env additions: `GEMINI_API_KEY=`, `SIGNER_GEMINI_MODEL=gemini-3.8-flash`, `SIGNER_TTS_MODEL=gemini-3.8-flash-tts`, `SIGNER_TTS_VOICE=`, `SIGNER_VOCAB=`. `SIGNER_MODEL` gains `lstm`. Python deps add `google-genai python-multipart`; extra `ml` = `torch` (CPU).
+
 ## 11. Asset specs
 | Asset | Path | Spec |
 |---|---|---|

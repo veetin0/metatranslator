@@ -1,44 +1,51 @@
 {
   "schema": "hackforge-contract.v1",
   "milestone": "M2",
-  "goal": "On the glasses: DAT stream -> USB tethering -> core -> caption card on Ray-Ban Display (DAT Display, or the Web App if M0 chose Fallback A) + phone TTS in the glasses speaker; session/device state machine; consent reset on STOPPED; core-down state; glasses-camera clips for domain-shift eval; GRU tried against kNN.",
+  "goal": "OBJECTIVE end to end (contract change 2026-11-13, CONTRACTS §12): Record/Stop on the glasses Web App (Neural Band select) -> iOS DAT app records a clip -> POST /translate -> OpenCV + MediaPipe Holistic -> PyTorch LSTM (vs kNN) over <= 20 signs with low-confidence rejection -> Gemini Flash glosses->English (template fallback) -> Gemini TTS WAV -> text + audio on the glasses; own + glasses-camera clips for eval.",
   "covers": ["R1", "R2", "D3", "J2"],
   "time_box": "Sat 07:00-14:00 EET (glasses slot G2 Sat 10:00-12:00)",
   "owned": [
     "glasses-app/**",
+    "data/glasses/**",
+    "data/landmarks/**",
     "core/signer_core/model/**",
     "core/tests/test_model.py",
     "eval/**",
-    "data/glasses/**",
-    "core/signer_core/sources/**",
+    "data/VOCAB.md",
     "core/signer_core/relay/**",
+    "core/signer_core/language/**",
+    "core/signer_core/sources/**",
+    "core/pyproject.toml",
+    ".env.example",
     "core/tests/test_relay.py",
+    "core/tests/test_translate.py",
     "core/tests/test_sources.py",
     "hud-web/**",
     "card/**",
     ".hackforge/evidence/M2-*"
   ],
   "dod": [
-    {"id": "D1", "check": "iOS unit tests green, including a Mock Device Kit display-preview test and the session state machine tests", "command": "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'"},
-    {"id": "D2", "check": "Core test suite green, incl. glasses frame source and paused/stopped/link-slow events", "command": "python -m pytest core/tests -q"},
-    {"id": "D3", "check": "Glasses-camera LOSO eval written", "command": "python eval/run.py --loso --source glasses --out eval/results/m2.json && python -c \"import json;d=json.load(open('eval/results/m2.json'));assert 'glasses' in d['sources'] and d['n_clips']>=50,d\""},
-    {"id": "D4", "check": "Evidence: photo through the lens of a live caption card", "command": "test -s .hackforge/evidence/M2-display-caption.jpg"},
-    {"id": "D5", "check": "Evidence: >= 10 measured sign-end -> lens latencies", "command": "python -c \"import re;v=[int(m.group(1)) for l in open('.hackforge/evidence/M2-latency.log') for m in [re.match(r'sign_end_to_lens_ms=(\\d+)',l)] if m];assert len(v)>=10,len(v)\""},
-    {"id": "D6", "check": "Hardware tick sheet signed by the iOS owner: captions on lens, TTS in glasses speaker, consent reset on STOPPED, core-down shown", "command": "test \"$(grep -cE '^- \\[x\\] ' .hackforge/evidence/M2-hardware.md)\" -ge 4"},
-    {"id": "D7", "check": "Web App mirror shows every lens state from contracts/events.example.jsonl and stays under 300 KB", "command": "npm --prefix hud-web test && npm --prefix hud-web run build && python -c \"import pathlib;s=sum(p.stat().st_size for p in pathlib.Path('hud-web/dist').rglob('*') if p.is_file());assert s<300*1024,s\""}
+    {"id": "D1", "check": "Core test suite green (no camera, glasses, network or Gemini key needed)", "command": "python -m pytest core/tests -q"},
+    {"id": "D2", "check": "POST /translate on a generated clip returns the CONTRACTS §12 Translation shape, offline (template mode, no key)", "command": "python -m pytest core/tests/test_translate.py -q"},
+    {"id": "D3", "check": "LSTM vs kNN LOSO on PopSign with <= 20 signs written; the shipped model is the better one on selective_acc at equal or higher coverage", "command": "python eval/run.py --loso --model lstm --out eval/results/m2-lstm.json && python eval/run.py --loso --model knn --out eval/results/m2-knn.json && python -c \"import json;a=json.load(open('eval/results/m2-lstm.json'));b=json.load(open('eval/results/m2-knn.json'));assert len(a['per_class'])<=20 and len(b['per_class'])<=20 and a['n_clips']>=1000,(a,b)\""},
+    {"id": "D4", "check": "Web App: Record/Stop button, recording/processing states, plays audio_url with speechSynthesis fallback, uncertain shown; tests green and under 300 KB", "command": "npm --prefix hud-web test && npm --prefix hud-web run build && python -c \"import pathlib;s=sum(p.stat().st_size for p in pathlib.Path('hud-web/dist').rglob('*') if p.is_file());assert s<300*1024,s\""},
+    {"id": "D5", "check": "Evidence: laptop demo without glasses (webcam clip -> /translate -> text + audio in the 600x600 Web App), real run, written up", "command": "test -s .hackforge/evidence/M2-laptop-demo.png && test -s .hackforge/evidence/M2-laptop-demo.md"},
+    {"id": "D6", "check": "iOS app builds and its tests pass (capture events -> record -> upload)", "command": "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'"},
+    {"id": "D7", "check": "Evidence on the glasses: photo of a translation on the Ray-Ban Display and a tick sheet (Record by Neural Band, text shown, audio heard, rejection shown)", "command": "test -s .hackforge/evidence/M2-display-caption.jpg && test \"$(grep -cE '^- \\[x\\] ' .hackforge/evidence/M2-hardware.md)\" -ge 4"},
+    {"id": "D8", "check": ">= 10 measured Stop -> text-on-lens latencies", "command": "python -c \"import re;v=[int(m.group(1)) for l in open('.hackforge/evidence/M2-latency.log') for m in [re.match(r'stop_to_text_ms=(\\d+)',l)] if m];assert len(v)>=10,len(v)\""}
   ],
   "validation_commands": [
     "python -m pytest core/tests -q",
-    "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'",
-    "npm --prefix hud-web test"
+    "npm --prefix hud-web test",
+    "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'"
   ],
   "risk": ["needs-spike"],
   "max_iterations": 3,
   "status": "todo",
   "tasks": [
-    {"id": "M2.1", "role": "full-stack", "title": "Glasses app: stream -> CoreClient (USB) -> captions back -> DAT Display caption card (throttled 500 ms, tiers per DESIGN.md) + AVSpeechSynthesizer for speak:true; state machine for registration/permission/session PAUSED/STOPPED/device state (BirdSpotter SessionRepository); /session/stop by:device on STOPPED; core-down UI; Mock Device Kit display-preview test; record glasses clips in G2", "owned": ["glasses-app/**", "data/glasses/**", ".hackforge/evidence/M2-display-caption.jpg", ".hackforge/evidence/M2-latency.log", ".hackforge/evidence/M2-hardware.md"], "owner": "agent", "machine": "lead's Mac (Xcode, iPhone, glasses slot)", "dod_ids": ["D1", "D4", "D5", "D6"]},
-    {"id": "M2.2", "role": "data-ml", "title": "GRU vs kNN on held-out signers (ship whichever wins), glasses-source eval, crop/normalisation tuning for the glasses viewpoint", "owned": ["core/signer_core/model/**", "core/tests/test_model.py", "eval/**"], "owner": "agent", "dod_ids": ["D3"]},
-    {"id": "M2.3", "role": "backend", "title": "Glasses frame source + paused/stopped/link-slow state events + consent reset on device stop", "owned": ["core/signer_core/sources/**", "core/signer_core/relay/**", "core/tests/test_relay.py", "core/tests/test_sources.py"], "owner": "agent", "dod_ids": ["D2"]},
-    {"id": "M2.4", "role": "frontend", "title": "Lens state designs shared by DAT cards and the Web App mirror (connecting, ON, paused, glasses off, permission denied, core down, link slow) + matching card state screens", "owned": ["hud-web/**", "card/**"], "owner": "agent", "dod_ids": ["D7"]}
+    {"id": "M2.1", "role": "full-stack", "title": "iOS DAT app: subscribe /ws/events, record the glasses camera between capture recording/processing, POST the MP4 to /translate; glasses slot: Web App on the Ray-Ban Display, Neural Band Record/Stop, photo, latencies, tick sheet; record own + glasses clips", "owned": ["glasses-app/**", "data/glasses/**", "data/landmarks/**", ".hackforge/evidence/M2-display-caption.jpg", ".hackforge/evidence/M2-latency.log", ".hackforge/evidence/M2-hardware.md"], "owner": "agent", "machine": "lead's Mac (Xcode, iPhone, glasses slot)", "dod_ids": ["D6", "D7", "D8"]},
+    {"id": "M2.2", "role": "data-ml", "title": "<= 20-sign vocabulary (SIGNER_VOCAB, VOCAB.md) + model registry + recognize_clip + PyTorch LSTM baseline with max-softmax floor and top1-top2 margin rejection + eval/run.py --model; ship the winner", "owned": ["core/signer_core/model/**", "core/tests/test_model.py", "eval/**", "data/VOCAB.md"], "owner": "crew:Topias", "dod_ids": ["D3"]},
+    {"id": "M2.3", "role": "backend", "title": "POST /translate (OpenCV decode) + /capture/start|stop + /audio/{id}.wav + Gemini Flash gloss->English with allowlist guard and template fallback + Gemini TTS WAV + caption broadcast; deps and .env.example", "owned": ["core/signer_core/relay/**", "core/signer_core/language/**", "core/signer_core/sources/**", "core/pyproject.toml", ".env.example", "core/tests/test_relay.py", "core/tests/test_translate.py", "core/tests/test_sources.py"], "owner": "crew:einoperamaa", "dod_ids": ["D1", "D2"]},
+    {"id": "M2.4", "role": "frontend", "title": "Web App: focusable Record/Stop (Neural Band select), recording/processing states, play audio_url (feature-detect, speechSynthesis fallback), uncertain label; dev laptop page that records the webcam (MediaRecorder) and POSTs /translate; laptop demo evidence", "owned": ["hud-web/**", "card/**", ".hackforge/evidence/M2-laptop-demo.png", ".hackforge/evidence/M2-laptop-demo.md"], "owner": "crew:Aadit", "dod_ids": ["D4", "D5"]}
   ]
 }
