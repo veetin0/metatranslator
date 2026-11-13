@@ -93,6 +93,17 @@ Source: https://github.com/meta/meta-wearables-dat-ios/tree/main/samples/BirdSpo
 - Take frame handling from `CameraAccess`: take the `VideoFrame`'s `CMSampleBuffer` and send it to the core.
 - On-device Apple Vision hand pose is possible later but not planned.
 
+## 5. DAT getting started + repos (lead's links, 2026-11-13)
+Sources: https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit , /version-dependencies/ , /mock-device-kit/ , /testing-mdk-ios/ , /set-up-release-channels , https://github.com/meta/meta-wearables-dat-android , https://github.com/meta/meta-wearables-webapp
+- **Requirements:** iOS 17.2+ / Android 10+, **Xcode 26.4 or later** (this Mac has 26.0.1 → update before M0). SDK 1.0.1 needs Meta AI app V292 and firmware V128.
+- **Developer Mode** lets an unpublished app register with the glasses without review; the app appears under Meta AI → App connections → Developer mode apps.
+- **Registration:** through the Wearables Developer Center (projects, versions, a private invite-only "Beta" release channel; managed Meta accounts not supported). The Android README calls the application ID "Required", while BirdSpotter's Info.plist uses 0 in Developer Mode, so we make a Developer Center project as a backup.
+- **Server-side gating:** a device can refuse a feature at runtime with `DeviceSessionError.CAPABILITY_DENIED` even on the right versions.
+- **Display:** a display module exists (`mwdat-display` on Android: "Use Display features on the Meta Ray-Ban Display glasses"). The docs pages don't cover camera + display concurrency, resolution or fps; M0 tests it.
+- **Mock Device Kit on iOS:** `MockDeviceKit.shared.pairGlasses(model:)`, `camera.setCameraFeed(fileURL:)` (**h265** video; CameraAccess converts automatically), phone camera as feed, simulated power/don-doff/fold/tap; `startTestServer(portFilePath:)` + `MockDeviceTestClient` for XCUITest. The docs pages don't mention a mock display (the iOS CHANGELOG does; verify).
+- **Experimental (Android README):** audio streaming and standalone photo capture. Speech/Inputs/Motion aren't tagged there, unlike our BirdSpotter notes; we avoid relying on any of them.
+- **Claude Code plugins (installed, user scope):** `mwdat-ios@mwdat-ios-marketplace` (from `meta/meta-wearables-dat-ios`) and `meta-wearables-webapp@meta-wearables` (skills build/ui/device/webmcp/test/optimize-performance/publish). Docs MCP `wearables` added.
+
 ## 3. Datasets: sign language → English
 "English sign language" here means **ASL (American Sign Language) glossed into English**, the language with the open datasets. BSL (British) data exists (BOBSL, BSL-1K), but it is BBC/Oxford-licensed, research-only and video-only, so not used. FinSL is dropped from the plan.
 
