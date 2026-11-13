@@ -1,0 +1,42 @@
+{
+  "schema": "hackforge-contract.v1",
+  "milestone": "M3",
+  "goal": "Two-way + trust + grafts: wearer reply (phone STT, typed fallback) -> card captions; right/wrong + live readout on card and lens footer; Not right veto; Teach-a-sign (5 reps -> prototypes, delete); Claude Haiku 4.5 fluent mode on gloss text only with gloss-only validator and offline template fallback; question flag; 3 triggerable D3 states; idle auto-stop 2 min. Each graft behind SIGNER_FLAGS.",
+  "covers": ["J1", "J3", "J4", "D3", "R3"],
+  "time_box": "Sat 14:00-21:00 EET (Teach cut at 18:00 if M2 is late; glasses slot G3 Sat 19:00-21:00)",
+  "owned": [
+    "glasses-app/**",
+    "core/signer_core/language/**",
+    "core/signer_core/vision/face.py",
+    "core/tests/test_validator.py",
+    "core/tests/test_language.py",
+    "core/signer_core/model/teach.py",
+    "core/signer_core/relay/feedback.py",
+    "core/signer_core/relay/idle.py",
+    "core/tests/test_teach.py",
+    "core/tests/test_consent.py",
+    "card/**",
+    ".hackforge/evidence/M3-*"
+  ],
+  "dod": [
+    {"id": "D1", "check": "Core suite green and includes validator, teach and consent tests", "command": "test -f core/tests/test_validator.py && test -f core/tests/test_teach.py && test -f core/tests/test_consent.py && python -m pytest core/tests -q"},
+    {"id": "D2", "check": "Validator rejects any LLM sentence that adds a content word not licensed by the glosses, and the template fallback is used offline (SIGNER_LLM=haiku with no key)", "command": "python -m pytest core/tests/test_validator.py -q"},
+    {"id": "D3", "check": "Idle auto-stop after SIGNER_IDLE_STOP_S and consent reset are tested", "command": "python -m pytest core/tests/test_consent.py -q"},
+    {"id": "D4", "check": "Eval m3 written", "command": "python eval/run.py --loso --out eval/results/m3.json && python -c \"import json;json.load(open('eval/results/m3.json'))['top1']\""},
+    {"id": "D5", "check": "iOS tests green incl. reply and D3 state tests", "command": "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'"},
+    {"id": "D6", "check": "Evidence: card screenshots of the 3 triggerable D3 states, the readout, Teach and a reply caption", "command": "for f in permission_denied glasses_off core_down readout teach reply; do test -s .hackforge/evidence/M3-card-$f.png || { echo missing $f; exit 1; }; done"}
+  ],
+  "validation_commands": [
+    "python -m pytest core/tests -q",
+    "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'"
+  ],
+  "risk": ["security-sensitive"],
+  "max_iterations": 3,
+  "status": "todo",
+  "tasks": [
+    {"id": "M3.1", "role": "full-stack", "title": "Glasses app: reply STT on the phone mic (MWDATSpeech only if stable) -> POST /reply, typed-reply fallback, triggerable D3 states (permission denied, glasses off, core down), readout footer on the DAT card", "owned": ["glasses-app/**"], "owner": "lead", "dod_ids": ["D5"]},
+    {"id": "M3.2", "role": "backend", "title": "LLM fluent mode (Claude Haiku 4.5, gloss text only) + gloss-only validator + offline template fallback + question flag from face blendshapes (live only)", "owned": ["core/signer_core/language/**", "core/signer_core/vision/face.py", "core/tests/test_validator.py", "core/tests/test_language.py"], "owner": "agent", "dod_ids": ["D2"]},
+    {"id": "M3.3", "role": "data-ml", "title": "Teach-a-sign (POST/GET/DELETE /teach, 5 reps -> kNN prototypes, one-tap delete) + feedback/veto + stats readout + idle auto-stop", "owned": ["core/signer_core/model/teach.py", "core/signer_core/relay/feedback.py", "core/signer_core/relay/idle.py", "core/tests/test_teach.py", "core/tests/test_consent.py"], "owner": "agent", "dod_ids": ["D1", "D3", "D4"]},
+    {"id": "M3.4", "role": "frontend", "title": "Card: right/wrong, Not right, readout, Teach UI + delete, reply captions, typed reply, privacy note, QR; screenshots", "owned": ["card/**", ".hackforge/evidence/M3-*"], "owner": "agent", "dod_ids": ["D6"]}
+  ]
+}

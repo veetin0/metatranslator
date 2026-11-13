@@ -1,11 +1,12 @@
 # State
-- Phase: 4 decide → plan checkpoint (Harness team run: waiting for the lead to accept PLAN.md)
+- Phase: build — step 2 done (contracts frozen); Harness runs the milestones from M0
+- Build step 2 (2026-11-13): CONTRACTS.md frozen, DESIGN.md (ui-ux-pro-max Minimalism/Swiss, accessibility palette; lens = additive black), contracts/M0–M4.json, gate.sh (always-on contract checks + DoD of every `done` contract; `SIGNER_GATE_SKIP_IOS=1` only on machines without Xcode), scaffold (`core/signer_core/contracts.py`, `contracts/events.example.jsonl`, `.env.example`, README skeleton). Contract changes vs PLAN: landmark clips store 75 points (pose + hands) float16, not 543 (git size); WS split into `/ws/frames` + `/ws/events`; relay app object `signer_core.relay.app:app`; evidence is committed (no video of people). Permissions applied from the proposal minus parser junk and the over-broad `Bash(bash:*)`/`cd`/`export`/`for` rules.
 - Profile: lean (plan: pro → lean per profiles.md; fable_ok false) · Models: research sonnet / architect opus / judge sonnet / build sonnet / craft sonnet / verify haiku / advisor opus
 - Limits: ≤2 local agents at once; research + architects ran on crew. Loop max 12 iterations, target 8.5. Verify: quick per iteration, blind judge final only.
 - Deadline: 2026-11-15T10:00+02:00 · Kickoff 2026-11-13 ~18:30–20:50 EET · ~37 h left at plan time · Feature freeze Sun 02:30
 - Current milestone / wave: none (M0 spike next)
 - Done: INVENTORY, DIRECTIVES, BRIEF, RULES, research (platform, sign-recognition, prior-art), POSSIBILITIES, options (safe-winner, ambitious), judge panel, OPTIONS, DECISION, PLAN
-- Next: lead accepts plan → build (CONTRACTS.md, contracts/M*.json, DESIGN.md, gate.sh) → M0 spike (needs-spike → advisor first)
+- Next: M0 spike when Harness sends the [run] message (needs-spike → advisor first)
 - Best metric vs baseline: — · Latest mock score: kickoff judge 7.0 weighted (option A + grafts)
 - Escalations / de-escalations: Kickoff "expected < 6" rule not triggered: judge's expected row (5.6) multiplies already risk-discounted J scores by feasibility, double-counting; used the 7.0 weighted average. No extra lateral round.
 - Plan revision 1 (2026-11-13, lead): Web App = primary lens HUD (Meta simulator for glasses-free dev), DAT Display = fallback; English/ASL only with Kaggle asl-signs pretraining; FinSL dropped. Source: research/webapps-and-datasets.md.

@@ -1,0 +1,33 @@
+{
+  "schema": "hackforge-contract.v1",
+  "milestone": "M4",
+  "goal": "Demo-proof: final held-out eval + chart, 3 timed rehearsals on real glasses, backup demo video from a rehearsal, deck v1, live-demo kit.",
+  "covers": ["D1", "D2", "D4", "D5", "J1", "J2", "J3", "J4"],
+  "time_box": "Sat 21:00-Sun 02:30 EET feature freeze (glasses slot G4 Sun 00:30-02:30)",
+  "owned": [
+    "deck/**",
+    "video/**",
+    "eval/**",
+    "demo/**"
+  ],
+  "dod": [
+    {"id": "D1", "check": "Final LOSO eval + chart written", "command": "python eval/run.py --loso --report --out eval/results/final.json && test -s eval/results/final.png && python -c \"import json;json.load(open('eval/results/final.json'))['selective_acc']\""},
+    {"id": "D2", "check": "Deck PDF exists, <= 15 MB", "command": "python -c \"import os;s=os.path.getsize('deck/signer.pdf');assert 0<s<=15*1024*1024,s\""},
+    {"id": "D3", "check": "Deck numbers come from eval/results (every percentage in the deck source appears in final.json or m*.json)", "command": "python deck/check_numbers.py"},
+    {"id": "D4", "check": "Demo video exists and is 60-90 s", "command": "python -c \"import subprocess;d=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0','video/out/demo.mp4']));assert 60<=d<=90,d\""},
+    {"id": "D5", "check": "3 timed rehearsals on real glasses logged as rows '| R1 | ...'", "command": "test \"$(grep -cE '^\\| R[1-9] \\|' demo/rehearsals.md)\" -ge 3"},
+    {"id": "D6", "check": "Live-demo kit files exist", "command": "test -s demo/consent-sign.pdf && test -s demo/volunteer-consent.md && test -s demo/script.md"}
+  ],
+  "validation_commands": [
+    "python eval/run.py --loso --report --out eval/results/final.json"
+  ],
+  "risk": [],
+  "max_iterations": 3,
+  "status": "todo",
+  "tasks": [
+    {"id": "M4.1", "role": "pitch", "title": "Deck 8-10 slides: problem/audience, why first-person, demo, data flow, honest eval, What we are not, consent, how it ships on the glasses, pilot; PopSign credit; number checker", "owned": ["deck/**"], "owner": "agent", "dod_ids": ["D2", "D3"]},
+    {"id": "M4.2", "role": "craft:video", "title": "60-90 s demo video from a real rehearsal (user's global video rules: confirm voice first, no Eric, building music, one VO take)", "owned": ["video/**"], "owner": "agent", "dod_ids": ["D4"]},
+    {"id": "M4.3", "role": "data-ml", "title": "Final eval + chart + unseen volunteer signer run if consented", "owned": ["eval/**"], "owner": "agent", "dod_ids": ["D1"]},
+    {"id": "M4.4", "role": "pitch", "title": "Live-demo kit: printed consent sign, volunteer consent form, 6-phrase script, rehearsal log", "owned": ["demo/**"], "dod_ids": ["D5", "D6"]}
+  ]
+}

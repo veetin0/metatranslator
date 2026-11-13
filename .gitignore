@@ -16,6 +16,17 @@ renders/cache/
 .hackforge/.gate-*
 .hackforge/.guard-errors.log
 .hackforge/RESUME.md
-.hackforge/evidence/
-evals/results/
+# Evidence is committed (gate checks it); never video of people
+.hackforge/evidence/**/*.mp4
+.hackforge/evidence/**/*.mov
+# PopSign videos: downloaded by script, deleted after landmark extraction
+data/popsign/raw/
+*.mp4
+!video/out/demo.mp4
+# Build output
+hud-web/dist/
+glasses-app/ios/build/
+DerivedData/
+*.egg-info/
+.pytest_cache/
 .DS_Store

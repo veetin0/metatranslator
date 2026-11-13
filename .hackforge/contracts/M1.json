@@ -1,0 +1,46 @@
+{
+  "schema": "hackforge-contract.v1",
+  "milestone": "M1",
+  "goal": "Thinnest end-to-end without glasses: webcam -> core -> 24-sign kNN (own clips + PopSign prototypes) -> template sentence -> caption with confidence tier in the hud-web Web App in the Display Simulator + speechSynthesis; Signer Card v0 whose Start/Stop gates the stream; LOSO eval v0 on own + PopSign held-out signers.",
+  "covers": ["D1", "J2", "J4", "R3"],
+  "time_box": "Fri 23:00-Sat 07:00 EET",
+  "owned": [
+    "core/signer_core/model/**",
+    "core/tests/test_model.py",
+    "core/signer_core/relay/**",
+    "core/signer_core/language/**",
+    "core/tests/test_relay.py",
+    "card/**",
+    "hud-web/**",
+    "data/landmarks/**",
+    "data/popsign/landmarks/**",
+    "eval/**",
+    ".hackforge/evidence/M1-*"
+  ],
+  "dod": [
+    {"id": "D1", "check": "Core test suite green (no camera, glasses or network needed)", "command": "python -m pytest core/tests -q"},
+    {"id": "D2", "check": "GET /health returns ok from the relay app object signer_core.relay.app:app", "command": "python -c \"from fastapi.testclient import TestClient;from signer_core.relay.app import app;r=TestClient(app).get('/health');assert r.status_code==200 and r.json()['status']=='ok',r.text\""},
+    {"id": "D3", "check": "Frames are refused while the session is off (consent gate) and accepted after POST /session/start", "command": "python -m pytest core/tests/test_relay.py -q -k consent"},
+    {"id": "D4", "check": ">= 1500 own landmark clips (3+ signers x 20 x 25 classes) in the CONTRACTS §5 format", "command": "python -c \"import glob;n=len(glob.glob('data/landmarks/*/*/*.npz'));assert n>=1500,n\""},
+    {"id": "D5", "check": ">= 2000 PopSign landmark clips extracted for the vocabulary signs", "command": "python -c \"import glob;n=len(glob.glob('data/popsign/landmarks/*/*.npz'));assert n>=2000,n\""},
+    {"id": "D6", "check": "LOSO eval v0 written with own + PopSign sources and valid metrics", "command": "python eval/run.py --loso --out eval/results/m1.json && python -c \"import json;d=json.load(open('eval/results/m1.json'));assert {'own','popsign'}<=set(d['sources']) and 0<=d['top1']<=1 and 0<=d['selective_acc']<=1 and d['n_clips']>=1000,d\""},
+    {"id": "D7", "check": "Web App renders every event in contracts/events.example.jsonl (tests) and stays under 300 KB", "command": "npm --prefix hud-web test && npm --prefix hud-web run build && python -c \"import pathlib;s=sum(p.stat().st_size for p in pathlib.Path('hud-web/dist').rglob('*') if p.is_file());assert s<300*1024,s\""},
+    {"id": "D8", "check": "Signer Card is served at GET / by the core", "command": "python -c \"from fastapi.testclient import TestClient;from signer_core.relay.app import app;r=TestClient(app).get('/');assert r.status_code==200 and 'Start' in r.text\""},
+    {"id": "D9", "check": "Evidence: simulator screenshot of a live caption and card Start -> caption -> Stop screenshots", "command": "test -s .hackforge/evidence/M1-sim-caption.png && test -s .hackforge/evidence/M1-card-start.png && test -s .hackforge/evidence/M1-card-stop.png"}
+  ],
+  "validation_commands": [
+    "python -m pytest core/tests -q",
+    "python -m signer_core.relay",
+    "python -m signer_core.sources.webcam --core ws://127.0.0.1:8000/ws/frames",
+    "npm --prefix hud-web run preview -- --host 127.0.0.1 --port 4173"
+  ],
+  "risk": [],
+  "max_iterations": 3,
+  "status": "todo",
+  "tasks": [
+    {"id": "M1.1", "role": "data-ml", "title": "Segmenter (REST-based sign boundaries) + PopSign landmark prototypes + kNN on own clips + calibrated confidence and top-2; uses signer_core.contracts tiers", "owned": ["core/signer_core/model/**", "core/tests/test_model.py"], "owner": "agent", "dod_ids": ["D1"]},
+    {"id": "M1.2", "role": "backend", "title": "Relay: FastAPI app at signer_core.relay.app:app, /ws/frames + /ws/events (CONTRACTS §2-4), session/consent state machine, frame ingest -> vision -> model, template gloss->English, serves card/ at /, python -m signer_core.relay entry", "owned": ["core/signer_core/relay/**", "core/signer_core/language/**", "core/tests/test_relay.py"], "owner": "agent", "dod_ids": ["D2", "D3", "D8"]},
+    {"id": "M1.3", "role": "frontend", "title": "Signer Card v0 (consent Start/Stop, ON light, latest caption, history) + Web App caption view (tiers, state line, readout footer, D-pad focus, speechSynthesis for speak:true) per DESIGN.md; tested in the Display Simulator; screenshots", "owned": ["card/**", "hud-web/**", ".hackforge/evidence/M1-*"], "owner": "agent", "dod_ids": ["D7", "D9"]},
+    {"id": "M1.4", "role": "data-ml", "title": "Record own clips (all 4 people, consented, landmarks only) + run PopSign extraction split across laptops + eval/run.py LOSO harness (CONTRACTS §6)", "owned": ["data/landmarks/**", "data/popsign/landmarks/**", "eval/**"], "dod_ids": ["D4", "D5", "D6"]}
+  ]
+}

@@ -1,0 +1,14 @@
+{"type":"state","state":"connecting","link":"ok","ts":1731520000000}
+{"type":"state","state":"on","link":"ok","ts":1731520001000}
+{"type":"partial","gloss":"HELLO","confidence":0.62,"ts":1731520002000}
+{"type":"caption","id":"c1","text":"Hello, can I ask a question?","gloss":["HELLO","QUESTION"],"tier":"confirmed","confidence":0.86,"alternatives":[],"question":true,"mode":"template","speak":true,"ts":1731520003000}
+{"type":"caption","id":"c2","text":"Where is the book?","gloss":["WHERE","BOOK"],"tier":"unsure","confidence":0.64,"alternatives":[{"text":"Where is the paper?","gloss":["WHERE","PAPER"],"confidence":0.41}],"question":true,"mode":"template","speak":false,"ts":1731520006000}
+{"type":"caption","id":"c3","text":"Didn't catch that","gloss":[],"tier":"none","confidence":0.31,"alternatives":[],"question":false,"mode":"template","speak":false,"ts":1731520009000}
+{"type":"retract","id":"c2"}
+{"type":"reply","text":"Sure, it's on page 12","source":"stt","ts":1731520012000}
+{"type":"stats","confirmed":17,"total":19}
+{"type":"state","state":"on","link":"slow","ts":1731520014000}
+{"type":"state","state":"paused","link":"ok","ts":1731520015000}
+{"type":"state","state":"glasses_off","link":"ok","ts":1731520016000}
+{"type":"state","state":"permission_denied","link":"ok","ts":1731520017000}
+{"type":"state","state":"off","link":"ok","ts":1731520018000}

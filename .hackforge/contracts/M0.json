@@ -1,0 +1,64 @@
+{
+  "schema": "hackforge-contract.v1",
+  "milestone": "M0",
+  "goal": "Go/no-go spike: DAT iOS app streams the glasses camera, shows a DAT Display card while streaming, plays TTS in the glasses and loops frames to the laptop over USB tethering; Web App hello installs; webcam MediaPipe bench; PopSign download + 24-sign vocabulary frozen. Ends with a written decision: DAT Display or Fallback A/B/C.",
+  "covers": ["R1", "R2", "D3"],
+  "time_box": "Fri 21:00-23:00 EET (glasses slot G1)",
+  "prerequisites": [
+    "Xcode >= 26.4 on the lead's Mac (has 26.0.1)",
+    "Meta AI app >= V292, glasses firmware >= V128, Developer Mode on",
+    "Glasses slot G1 booked; app builds and streams against Mock Device Kit before the slot",
+    "Watch for DeviceSessionError.CAPABILITY_DENIED and report it to Meta immediately"
+  ],
+  "references": [
+    "https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit",
+    "https://wearables.developer.meta.com/docs/develop/webapps",
+    "https://chromewebstore.google.com/detail/jpjlmmodokemlepklkdbimceggpbjcll",
+    "https://github.com/meta/meta-wearables-dat-ios (samples/BirdSpotter, samples/CameraAccess)",
+    "https://github.com/meta/meta-wearables-webapp",
+    "https://github.com/meta/meta-wearables-dat-android",
+    "MCP https://mcp.developer.meta.com/wearables (search_webapps_docs, search_dat_docs)"
+  ],
+  "owned": [
+    "glasses-app/**",
+    "hud-web/**",
+    "core/tools/tunnel.sh",
+    "core/signer_core/vision/**",
+    "core/signer_core/sources/**",
+    "core/pyproject.toml",
+    "core/tools/record.py",
+    "core/tools/get_popsign.py",
+    "core/tools/extract_landmarks.py",
+    "data/VOCAB.md",
+    "data/popsign/**",
+    ".hackforge/evidence/M0-*"
+  ],
+  "dod": [
+    {"id": "D1", "check": "M0-spike.md records PASS or FAIL for each of (a)-(f) as table rows '| (a) | PASS |'", "command": "test \"$(grep -cE '^\\| \\([a-f]\\) \\| (PASS|FAIL) \\|' .hackforge/evidence/M0-spike.md)\" -eq 6"},
+    {"id": "D2", "check": "M0-spike.md ends the spike with a decision line", "command": "grep -qE '^Decision: (DAT Display|Fallback A|Fallback B|Fallback C)' .hackforge/evidence/M0-spike.md"},
+    {"id": "D3", "check": "Web App hello screenshot from the Display Simulator exists", "command": "test -s .hackforge/evidence/M0-sim-hello.png"},
+    {"id": "D4", "check": "iOS app builds for the simulator (Xcode >= 26.4)", "command": "xcodebuild build -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'generic/platform=iOS Simulator'"},
+    {"id": "D5", "check": "Web App builds, has the mrbd-web-app-capable meta tag and is under 300 KB", "command": "npm --prefix hud-web run build && grep -q 'mrbd-web-app-capable' hud-web/index.html && python -c \"import pathlib;s=sum(p.stat().st_size for p in pathlib.Path('hud-web/dist').rglob('*') if p.is_file());assert s<300*1024,s\""},
+    {"id": "D6", "check": "Tunnel script is valid bash", "command": "bash -n core/tools/tunnel.sh"},
+    {"id": "D7", "check": "Core package imports (vision + webcam source)", "command": "python -c \"import signer_core.vision, signer_core.sources.webcam\""},
+    {"id": "D8", "check": "Webcam MediaPipe Holistic bench recorded >= 15 fps (written by: python -m signer_core.sources.webcam --bench 10 --out .hackforge/evidence/M0-bench.json)", "command": "python -c \"import json;d=json.load(open('.hackforge/evidence/M0-bench.json'));assert d['fps']>=15,d\""},
+    {"id": "D9", "check": "Record tool dry run exits 0", "command": "python core/tools/record.py --dry-run"},
+    {"id": "D10", "check": "VOCAB.md lists >= 25 rows (24 signs + REST) with source popsign or own", "command": "python -c \"import re;r=[l for l in open('data/VOCAB.md') if re.match(r'^\\| [A-Z][A-Z0-9_-]* \\|.*\\| (popsign|own) \\|',l)];assert len(r)>=25,len(r)\""},
+    {"id": "D11", "check": "PopSign download script plans the vocabulary signs only; extractor CLI runs", "command": "python core/tools/get_popsign.py --vocab data/VOCAB.md --dry-run && python core/tools/extract_landmarks.py --help"}
+  ],
+  "validation_commands": [
+    "python -m pip install -e \"core[dev]\"",
+    "python -m signer_core.sources.webcam --bench 10 --out .hackforge/evidence/M0-bench.json",
+    "npm --prefix hud-web run build",
+    "npm --prefix hud-web run preview -- --host 127.0.0.1 --port 4173"
+  ],
+  "risk": ["needs-spike"],
+  "max_iterations": 3,
+  "status": "todo",
+  "tasks": [
+    {"id": "M0.1", "role": "full-stack", "title": "DAT iOS spike from BirdSpotter/CameraAccess: team signing + registration, camera at medium, DAT Display hello while streaming, TTS to glasses, USB-tether frames to laptop (CONTRACTS §3, §8); runs against Mock Device Kit before G1; fills M0-spike.md (a)-(d), (f)", "owned": ["glasses-app/**", ".hackforge/evidence/M0-spike.md"], "owner": "lead", "dod_ids": ["D1", "D2", "D4"]},
+    {"id": "M0.2", "role": "frontend", "title": "Signer Web App hello: 600x600 mrbd-web-app-capable page, WS echo of contracts/events.example.jsonl, speechSynthesis, GitHub Pages HTTPS + fb-viewapp:// QR, simulator screenshot; cloudflared tunnel script; check (e) in G1", "owned": ["hud-web/**", "core/tools/tunnel.sh", ".hackforge/evidence/M0-sim-hello.png"], "owner": "agent", "dod_ids": ["D3", "D5", "D6"]},
+    {"id": "M0.3", "role": "data-ml", "title": "Core scaffold: pyproject, webcam source + MediaPipe Holistic bench, landmark extraction into the 75-point layout of CONTRACTS §5, features module", "owned": ["core/signer_core/vision/**", "core/signer_core/sources/**", "core/pyproject.toml", ".hackforge/evidence/M0-bench.json"], "owner": "agent", "dod_ids": ["D7", "D8"]},
+    {"id": "M0.4", "role": "data-ml", "title": "PopSign v1.0 download (vocabulary signs only, find archive vs per-sign) + batch extractor that deletes videos after; freeze 24 signs + REST against PopSign's 250; landmark record tool", "owned": ["core/tools/record.py", "core/tools/get_popsign.py", "core/tools/extract_landmarks.py", "data/VOCAB.md", "data/popsign/**"], "owner": "agent", "dod_ids": ["D9", "D10", "D11"]}
+  ]
+}

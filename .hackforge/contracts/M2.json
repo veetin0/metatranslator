@@ -1,0 +1,44 @@
+{
+  "schema": "hackforge-contract.v1",
+  "milestone": "M2",
+  "goal": "On the glasses: DAT stream -> USB tethering -> core -> caption card on Ray-Ban Display (DAT Display, or the Web App if M0 chose Fallback A) + phone TTS in the glasses speaker; session/device state machine; consent reset on STOPPED; core-down state; glasses-camera clips for domain-shift eval; GRU tried against kNN.",
+  "covers": ["R1", "R2", "D3", "J2"],
+  "time_box": "Sat 07:00-14:00 EET (glasses slot G2 Sat 10:00-12:00)",
+  "owned": [
+    "glasses-app/**",
+    "core/signer_core/model/**",
+    "core/tests/test_model.py",
+    "eval/**",
+    "data/glasses/**",
+    "core/signer_core/sources/**",
+    "core/signer_core/relay/**",
+    "core/tests/test_relay.py",
+    "core/tests/test_sources.py",
+    "hud-web/**",
+    "card/**",
+    ".hackforge/evidence/M2-*"
+  ],
+  "dod": [
+    {"id": "D1", "check": "iOS unit tests green, including a Mock Device Kit display-preview test and the session state machine tests", "command": "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'"},
+    {"id": "D2", "check": "Core test suite green, incl. glasses frame source and paused/stopped/link-slow events", "command": "python -m pytest core/tests -q"},
+    {"id": "D3", "check": "Glasses-camera LOSO eval written", "command": "python eval/run.py --loso --source glasses --out eval/results/m2.json && python -c \"import json;d=json.load(open('eval/results/m2.json'));assert 'glasses' in d['sources'] and d['n_clips']>=50,d\""},
+    {"id": "D4", "check": "Evidence: photo through the lens of a live caption card", "command": "test -s .hackforge/evidence/M2-display-caption.jpg"},
+    {"id": "D5", "check": "Evidence: >= 10 measured sign-end -> lens latencies", "command": "python -c \"import re;v=[int(m.group(1)) for l in open('.hackforge/evidence/M2-latency.log') for m in [re.match(r'sign_end_to_lens_ms=(\\d+)',l)] if m];assert len(v)>=10,len(v)\""},
+    {"id": "D6", "check": "Hardware tick sheet signed by the iOS owner: captions on lens, TTS in glasses speaker, consent reset on STOPPED, core-down shown", "command": "test \"$(grep -cE '^- \\[x\\] ' .hackforge/evidence/M2-hardware.md)\" -ge 4"},
+    {"id": "D7", "check": "Web App mirror shows every lens state from contracts/events.example.jsonl and stays under 300 KB", "command": "npm --prefix hud-web test && npm --prefix hud-web run build && python -c \"import pathlib;s=sum(p.stat().st_size for p in pathlib.Path('hud-web/dist').rglob('*') if p.is_file());assert s<300*1024,s\""}
+  ],
+  "validation_commands": [
+    "python -m pytest core/tests -q",
+    "xcodebuild test -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'platform=iOS Simulator,name=iPhone 17'",
+    "npm --prefix hud-web test"
+  ],
+  "risk": ["needs-spike"],
+  "max_iterations": 3,
+  "status": "todo",
+  "tasks": [
+    {"id": "M2.1", "role": "full-stack", "title": "Glasses app: stream -> CoreClient (USB) -> captions back -> DAT Display caption card (throttled 500 ms, tiers per DESIGN.md) + AVSpeechSynthesizer for speak:true; state machine for registration/permission/session PAUSED/STOPPED/device state (BirdSpotter SessionRepository); /session/stop by:device on STOPPED; core-down UI; Mock Device Kit display-preview test; record glasses clips in G2", "owned": ["glasses-app/**", "data/glasses/**", ".hackforge/evidence/M2-display-caption.jpg", ".hackforge/evidence/M2-latency.log", ".hackforge/evidence/M2-hardware.md"], "owner": "lead", "dod_ids": ["D1", "D4", "D5", "D6"]},
+    {"id": "M2.2", "role": "data-ml", "title": "GRU vs kNN on held-out signers (ship whichever wins), glasses-source eval, crop/normalisation tuning for the glasses viewpoint", "owned": ["core/signer_core/model/**", "core/tests/test_model.py", "eval/**"], "owner": "agent", "dod_ids": ["D3"]},
+    {"id": "M2.3", "role": "backend", "title": "Glasses frame source + paused/stopped/link-slow state events + consent reset on device stop", "owned": ["core/signer_core/sources/**", "core/signer_core/relay/**", "core/tests/test_relay.py", "core/tests/test_sources.py"], "owner": "agent", "dod_ids": ["D2"]},
+    {"id": "M2.4", "role": "frontend", "title": "Lens state designs shared by DAT cards and the Web App mirror (connecting, ON, paused, glasses off, permission denied, core down, link slow) + matching card state screens", "owned": ["hud-web/**", "card/**"], "owner": "agent", "dod_ids": ["D7"]}
+  ]
+}
