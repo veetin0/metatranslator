@@ -4,7 +4,7 @@
 - Profile: lean (plan: pro → lean per profiles.md; fable_ok false) · Models: research sonnet / architect opus / judge sonnet / build sonnet / craft sonnet / verify haiku / advisor opus
 - Limits: ≤2 local agents at once; research + architects ran on crew. Loop max 12 iterations, target 8.5. Verify: quick per iteration, blind judge final only.
 - Deadline: 2026-11-15T10:00+02:00 · Kickoff 2026-11-13 ~18:30–20:50 EET · ~37 h left at plan time · Feature freeze Sun 02:30
-- Current milestone / wave: none (M0 spike next)
+- Current milestone / wave: M0 (crew offline → all tasks local). M0.4A + M0.4B merged (D9, D10, D11 pass on main); M0.1 iOS builder and M0.3 vision/bench builder running; M0.2 web hello queued. D1, D2, D4 moved to contracts/M0-hw.json (lead, 2026-11-13; G1 + Xcode ≥ 26.4). Open: PAPER in contracts/events.example.jsonl is not in VOCAB (suggest BOOK); 4 own signs (HELP, QUESTION, UNDERSTAND, AGAIN) still need recording.
 - Done: INVENTORY, DIRECTIVES, BRIEF, RULES, research (platform, sign-recognition, prior-art), POSSIBILITIES, options (safe-winner, ambitious), judge panel, OPTIONS, DECISION, PLAN
 - Next: M0 spike when Harness sends the [run] message (needs-spike → advisor first)
 - Best metric vs baseline: — · Latest mock score: kickoff judge 7.0 weighted (option A + grafts)

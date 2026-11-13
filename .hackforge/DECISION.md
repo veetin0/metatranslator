@@ -74,3 +74,6 @@ Deck (8–10 slides, incl. honest eval chart, "What we are not", consent design,
 1. Claude fluent mode (keep templates) 2. question flag 3. GRU (ship kNN) 4. Teach-a-sign (cut at Sat 18:00 if M2 is late) 5. reply STT (typed reply instead) 6. on-phone MediaPipe stretch.
 **Never cut:** consent/Start-Stop, confidence tiers, wearer reply → card captions (typed at minimum), the 3 triggerable D3 states (permission denied, glasses off, core down), held-out eval number, backup video.
 **Dropped entirely:** Neural Band input, negation flag, fingerspelling, Gemini verifier, sign-based consent.
+
+## Scope changes
+- 2026-11-13 (lead): M0's spike results (D1, D2) and iOS build (D4) moved to a separate contract `contracts/M0-hw.json`, run in glasses slot G1 after the Xcode ≥ 26.4 update. M0 is done on the software checks (D3, D5–D11, incl. the real webcam bench D8). The fallback decision still has to land in M0-hw before M2 starts.

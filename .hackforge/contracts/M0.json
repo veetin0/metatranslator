@@ -1,7 +1,7 @@
 {
   "schema": "hackforge-contract.v1",
   "milestone": "M0",
-  "goal": "Go/no-go spike: DAT iOS app streams the glasses camera, shows a DAT Display card while streaming, plays TTS in the glasses and loops frames to the laptop over USB tethering; Web App hello installs; webcam MediaPipe bench; PopSign download + 24-sign vocabulary frozen. Ends with a written decision: DAT Display or Fallback A/B/C.",
+  "goal": "Go/no-go spike: DAT iOS app streams the glasses camera, shows a DAT Display card while streaming, plays TTS in the glasses and loops frames to the laptop over USB tethering; Web App hello installs; webcam MediaPipe bench; PopSign download + 24-sign vocabulary frozen. Ends with a written decision: DAT Display or Fallback A/B/C. Scope cut (lead, 2026-11-13): spike results D1/D2 and the iOS build D4 moved to M0-hw (glasses slot G1, Xcode >= 26.4).",
   "covers": ["R1", "R2", "D3"],
   "time_box": "Fri 21:00-23:00 EET (glasses slot G1)",
   "prerequisites": [
@@ -34,10 +34,7 @@
     ".hackforge/evidence/M0-*"
   ],
   "dod": [
-    {"id": "D1", "check": "M0-spike.md records PASS or FAIL for each of (a)-(f) as table rows '| (a) | PASS |'", "command": "test \"$(grep -cE '^\\| \\([a-f]\\) \\| (PASS|FAIL) \\|' .hackforge/evidence/M0-spike.md)\" -eq 6"},
-    {"id": "D2", "check": "M0-spike.md ends the spike with a decision line", "command": "grep -qE '^Decision: (DAT Display|Fallback A|Fallback B|Fallback C)' .hackforge/evidence/M0-spike.md"},
     {"id": "D3", "check": "Web App hello screenshot from the Display Simulator exists", "command": "test -s .hackforge/evidence/M0-sim-hello.png"},
-    {"id": "D4", "check": "iOS app builds for the simulator (Xcode >= 26.4)", "command": "xcodebuild build -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'generic/platform=iOS Simulator'"},
     {"id": "D5", "check": "Web App builds, has the mrbd-web-app-capable meta tag and is under 300 KB", "command": "npm --prefix hud-web run build && grep -q 'mrbd-web-app-capable' hud-web/index.html && python -c \"import pathlib;s=sum(p.stat().st_size for p in pathlib.Path('hud-web/dist').rglob('*') if p.is_file());assert s<300*1024,s\""},
     {"id": "D6", "check": "Tunnel script is valid bash", "command": "bash -n core/tools/tunnel.sh"},
     {"id": "D7", "check": "Core package imports (vision + webcam source)", "command": "python -c \"import signer_core.vision, signer_core.sources.webcam\""},
@@ -56,7 +53,7 @@
   "max_iterations": 3,
   "status": "todo",
   "tasks": [
-    {"id": "M0.1", "role": "full-stack", "title": "DAT iOS spike from BirdSpotter/CameraAccess: team signing + registration, camera at medium, DAT Display hello while streaming, TTS to glasses, USB-tether frames to laptop (CONTRACTS §3, §8); runs against Mock Device Kit before G1; fills M0-spike.md (a)-(d), (f)", "owned": ["glasses-app/**", ".hackforge/evidence/M0-spike.md"], "owner": "agent", "machine": "lead's Mac (Xcode, iPhone, glasses slot)", "dod_ids": ["D1", "D2", "D4"]},
+    {"id": "M0.1", "role": "full-stack", "title": "DAT iOS spike from BirdSpotter/CameraAccess: team signing + registration, camera at medium, DAT Display hello while streaming, TTS to glasses, USB-tether frames to laptop (CONTRACTS §3, §8); runs against Mock Device Kit before G1; fills M0-spike.md (a)-(d), (f)", "owned": ["glasses-app/**", ".hackforge/evidence/M0-spike.md"], "owner": "agent", "machine": "lead's Mac (Xcode, iPhone, glasses slot)", "dod_ids": [], "note": "D1, D2, D4 moved to contracts/M0-hw.json (lead, 2026-11-13); M0 keeps the code only"},
     {"id": "M0.2", "role": "frontend", "title": "Signer Web App hello: 600x600 mrbd-web-app-capable page, WS echo of contracts/events.example.jsonl, speechSynthesis, GitHub Pages HTTPS + fb-viewapp:// QR, simulator screenshot; cloudflared tunnel script; check (e) in G1", "owned": ["hud-web/**", "core/tools/tunnel.sh", ".hackforge/evidence/M0-sim-hello.png"], "owner": "agent", "dod_ids": ["D3", "D5", "D6"]},
     {"id": "M0.3", "role": "data-ml", "title": "Core scaffold: pyproject, webcam source + MediaPipe Holistic bench, landmark extraction into the 75-point layout of CONTRACTS §5, features module", "owned": ["core/signer_core/vision/**", "core/signer_core/sources/**", "core/pyproject.toml", ".hackforge/evidence/M0-bench.json"], "owner": "agent", "dod_ids": ["D7", "D8"]},
     {"id": "M0.4", "role": "data-ml", "title": "PopSign v1.0 download (vocabulary signs only, find archive vs per-sign) + batch extractor that deletes videos after; freeze 24 signs + REST against PopSign's 250; landmark record tool", "owned": ["core/tools/record.py", "core/tools/get_popsign.py", "core/tools/extract_landmarks.py", "data/VOCAB.md", "data/popsign/**"], "owner": "agent", "dod_ids": ["D9", "D10", "D11"]}

@@ -1,0 +1,39 @@
+{
+  "schema": "hackforge-contract.v1",
+  "milestone": "M0-hw",
+  "goal": "Hardware half of the M0 spike, split off from M0 by the lead (2026-11-13): build the iOS spike app on Xcode >= 26.4, run checks (a)-(f) on the real glasses in slot G1 and write the decision: DAT Display or Fallback A/B/C.",
+  "covers": ["R1", "R2", "D3"],
+  "time_box": "Fri 21:00-23:00 EET (glasses slot G1), after the Xcode update",
+  "prerequisites": [
+    "Xcode >= 26.4 on the lead's Mac (has 26.0.1)",
+    "Meta AI app >= V292, glasses firmware >= V128, Developer Mode on",
+    "Glasses slot G1 booked; app builds and streams against Mock Device Kit before the slot",
+    "Watch for DeviceSessionError.CAPABILITY_DENIED and report it to Meta immediately"
+  ],
+  "references": [
+    "https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit",
+    "https://wearables.developer.meta.com/docs/develop/webapps",
+    "https://github.com/meta/meta-wearables-dat-ios (samples/BirdSpotter, samples/CameraAccess)",
+    "https://github.com/meta/meta-wearables-webapp",
+    "https://github.com/meta/meta-wearables-dat-android",
+    "MCP https://mcp.developer.meta.com/wearables (search_webapps_docs, search_dat_docs)"
+  ],
+  "owned": [
+    "glasses-app/**",
+    ".hackforge/evidence/M0-spike.md"
+  ],
+  "dod": [
+    {"id": "D1", "check": "M0-spike.md records PASS or FAIL for each of (a)-(f) as table rows '| (a) | PASS |'", "command": "test \"$(grep -cE '^\\| \\([a-f]\\) \\| (PASS|FAIL) \\|' .hackforge/evidence/M0-spike.md)\" -eq 6"},
+    {"id": "D2", "check": "M0-spike.md ends the spike with a decision line", "command": "grep -qE '^Decision: (DAT Display|Fallback A|Fallback B|Fallback C)' .hackforge/evidence/M0-spike.md"},
+    {"id": "D4", "check": "iOS app builds for the simulator (Xcode >= 26.4)", "command": "xcodebuild build -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'generic/platform=iOS Simulator'"}
+  ],
+  "validation_commands": [
+    "xcodebuild build -quiet -project glasses-app/ios/Signer.xcodeproj -scheme Signer -destination 'generic/platform=iOS Simulator'"
+  ],
+  "risk": ["needs-spike"],
+  "max_iterations": 3,
+  "status": "todo",
+  "tasks": [
+    {"id": "M0hw.1", "role": "full-stack", "title": "Build the M0.1 spike app on Xcode >= 26.4, run (a)-(f) on the glasses in G1 (check (e) = Web App hello on the lens), fill M0-spike.md with PASS/FAIL and the Decision line", "owned": ["glasses-app/**", ".hackforge/evidence/M0-spike.md"], "owner": "agent", "machine": "lead's Mac (Xcode, iPhone, glasses slot)", "dod_ids": ["D1", "D2", "D4"]}
+  ]
+}
