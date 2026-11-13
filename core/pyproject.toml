@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "signer-core"
+version = "0.1.0"
+description = "Signer core: ASL landmarks -> English captions (MediaPipe Holistic, relay, classifier)"
+requires-python = ">=3.11,<3.13"  # mediapipe wheels: use a 3.12 venv (core/.venv)
+dependencies = [
+  "numpy",
+  "mediapipe>=1.2",
+  "opencv-python",
+  "fastapi",
+  "uvicorn[standard]",
+  "httpx",
+  "anthropic",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["signer_core*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
