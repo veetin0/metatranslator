@@ -2,16 +2,21 @@ import XCTest
 
 @testable import Signer
 
-/// App to core state message (contract change pending). Flag `AppFlags.sendStateToCore` is OFF.
+/// App to core state message (CONTRACTS section 4 app state relay). `AppFlags.sendStateToCore` is ON.
 final class StateMessageTests: XCTestCase {
   private func json(_ s: String) throws -> [String: Any] {
     try XCTUnwrap(JSONSerialization.jsonObject(with: Data(s.utf8)) as? [String: Any])
   }
 
-  func testFlagIsOffByDefault() {
-    XCTAssertFalse(AppFlags.sendStateToCore)
+  func testFlagIsOnByDefault() {
+    XCTAssertTrue(AppFlags.sendStateToCore)
     var reporter = StateReporter()
-    XCTAssertNil(reporter.message(for: .glassesOff, nowMs: 1), "nothing is sent with the flag off")
+    XCTAssertEqual(reporter.message(for: .glassesOff, nowMs: 1)?.state, .glassesOff)
+  }
+
+  func testNothingIsSentWithTheFlagOff() {
+    var reporter = StateReporter(enabled: false)
+    XCTAssertNil(reporter.message(for: .glassesOff, nowMs: 1))
   }
 
   func testEncodingOfEachReportableState() throws {

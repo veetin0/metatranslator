@@ -33,6 +33,7 @@ REPO = Path(__file__).resolve().parents[3]
 MAX_FRAME_AGE_MS = 300
 ACK_EVERY = 30
 CLOSE_CONSENT = 4403
+APP_STATES = ("glasses_off", "permission_denied", "on")
 
 
 class StartBody(BaseModel):
@@ -200,9 +201,20 @@ class Relay:
             raise ValueError("source must be stt or typed")
         await self.hub.broadcast({"type": "reply", "text": text.strip(), "source": source, "ts": now_ms()})
 
-    async def on_client_message(self, msg: dict) -> None:
+    async def app_state(self, state: str, sender: WebSocket | None = None) -> None:
+        """iOS app fault (CONTRACTS §4 app state relay): passed on to the other clients, session untouched."""
+        if state not in APP_STATES:
+            raise ValueError(f"app state must be one of {APP_STATES}")
+        ev = {"type": "state", "state": state, "link": "ok", "ts": now_ms(), "from": "app"}
+        for ws in list(self.hub.clients):
+            if ws is not sender:
+                await self.hub.send(ws, ev)
+
+    async def on_client_message(self, msg: dict, sender: WebSocket | None = None) -> None:
         kind = msg.get("type")
-        if kind == "feedback":
+        if kind == "state" and msg.get("from") == "app":
+            await self.app_state(str(msg.get("state", "")), sender)
+        elif kind == "feedback":
             await self.feedback(str(msg.get("caption_id", "")), str(msg.get("verdict", "")))
         elif kind == "reply":
             await self.reply(str(msg.get("text", "")), str(msg.get("source", "typed")))
@@ -301,7 +313,7 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
             while True:
                 try:
                     msg = json.loads(await ws.receive_text())
-                    await relay.on_client_message(msg if isinstance(msg, dict) else {})
+                    await relay.on_client_message(msg if isinstance(msg, dict) else {}, ws)
                 except (ValueError, KeyError) as e:
                     log.info("ignored client message: %s", e)
         except WebSocketDisconnect:

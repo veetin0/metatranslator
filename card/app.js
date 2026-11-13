@@ -43,7 +43,8 @@ const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 const time = (ms) => new Date(ms || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const icon = (id, size = 22) => `<svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="${size}" height="${size}"><use href="#${id}"/></svg>`;
 const announce = (t) => { const a = $("announce"); a.textContent = ""; setTimeout(() => (a.textContent = t), 50); };
-const effective = () => (coreDown ? "core_down" : serverState);
+let appFault = null; // "glasses_off" | "permission_denied" from the iOS app (state with from:"app"), never the session
+const effective = () => (coreDown ? "core_down" : appFault || serverState);
 
 // Re-render a region without dropping keyboard focus on the control the user just pressed.
 function keepFocus(render) {
@@ -162,6 +163,11 @@ function renderTeach() {
 function onEvent(ev) {
   switch (ev.type) {
     case "state":
+      if (ev.from === "app") {
+        appFault = ev.state === "glasses_off" || ev.state === "permission_denied" ? ev.state : null;
+        renderState();
+        break;
+      }
       serverState = ev.state === "core_down" ? serverState : ev.state;
       link = ev.link || "ok";
       if (serverState !== "on") $("partial").textContent = "";

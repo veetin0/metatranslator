@@ -207,6 +207,19 @@ def test_card_served_at_root(tmp_path, classifier):
     assert TestClient(default_app).get("/").status_code == 200
 
 
+def test_app_state_is_passed_on_to_the_card_not_the_session(classifier):
+    client = make_client(classifier)
+    with client.websocket_connect("/ws/events") as app_ws, client.websocket_connect("/ws/events") as card:
+        app_ws.receive_text(), app_ws.receive_text(), card.receive_text(), card.receive_text()
+        app_ws.send_text(json.dumps({"type": "state", "state": "glasses_off", "link": "ok", "ts": 1, "from": "app"}))
+        ev = recv_until(card, "state")
+        assert ev["state"] == "glasses_off" and ev["from"] == "app"
+        app_ws.send_text(json.dumps({"type": "state", "state": "off", "from": "app"}))  # not an app state: ignored
+        app_ws.send_text(json.dumps({"type": "state", "state": "on", "from": "app"}))
+        assert recv_until(card, "state")["state"] == "on"
+    assert client.get("/session").json()["state"] == "off"  # consent is only Start/Stop
+
+
 def test_vocab_lists_signs():
     signs = TestClient(default_app).get("/vocab").json()["signs"]
     assert len(signs) == 24 and {"gloss": "POTTY", "english": "bathroom", "source": "popsign"} in signs

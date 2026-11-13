@@ -1,9 +1,9 @@
 import Foundation
 
-/// App to core state message (contract change PENDING lead approval):
+/// App to core state message (CONTRACTS section 4 app state relay, approved 2026-11-14):
 /// `{"type":"state","state":"glasses_off"|"permission_denied"|"on","link":"ok","ts":ms,"from":"app"}`
-/// sent on `/ws/events` when the app state changes. Behind `AppFlags.sendStateToCore`, OFF by
-/// default, so today's core never sees it.
+/// sent on `/ws/events` when the app state changes; the core passes it on to the card.
+/// Behind `AppFlags.sendStateToCore` (ON).
 struct StateMessage: Codable, Equatable {
   enum Wire: String, Codable, Equatable {
     case on

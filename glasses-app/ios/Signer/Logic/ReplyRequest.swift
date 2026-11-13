@@ -129,9 +129,9 @@ struct ReplyComposer: Equatable {
 /// environment, the app from a launch argument `--flags teach,reply_stt` or the same
 /// environment variable. With no value (the normal phone case) reply STT is on.
 enum AppFlags {
-  /// App to core `state` message (contract change PENDING lead approval). OFF by default:
-  /// the core would drop or reject an unknown client message today.
-  static let sendStateToCore = false
+  /// App to core `state` message (CONTRACTS section 4 app state relay, approved by the lead
+  /// 2026-11-14): the core passes it on to the card.
+  static let sendStateToCore = true
 
   static func parse(_ raw: String?) -> Set<String> {
     guard let raw else { return [] }

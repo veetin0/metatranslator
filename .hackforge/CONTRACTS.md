@@ -43,7 +43,8 @@ Core → clients:
 - `{"type":"retract","id":"c42"}` — after a veto; lens removes it.
 - `{"type":"reply","text":"Sure, page 12","source":"stt"|"typed","ts":<ms>}`
 - `{"type":"stats","confirmed":17,"total":19}`
-Clients → core: `{"type":"feedback","caption_id":"c42","verdict":"right"|"wrong"|"veto"}`, `{"type":"reply","text":"…","source":"stt"|"typed"}`, `{"type":"hello","client":"app"|"card"|"hud"}`.
+Clients → core: `{"type":"feedback","caption_id":"c42","verdict":"right"|"wrong"|"veto"}`, `{"type":"reply","text":"…","source":"stt"|"typed"}`, `{"type":"hello","client":"app"|"card"|"hud"}`, and from the iOS app only `{"type":"state","state":"glasses_off"|"permission_denied"|"on","link":"ok","ts":<ms>,"from":"app"}`.
+**App state relay (contract change M3, lead 2026-11-14):** the core passes an app `state` message on to every other `/ws/events` client unchanged (with `"from":"app"`), so the card shows glasses off / permission denied. It never changes the consent session; `"on"` clears the app's fault. Core-originated `state` events have no `from`.
 
 **Tiers** (DECISION.md, env-tunable): confidence ≥ `SIGNER_CONF_HIGH` (0.80) → `confirmed` (show + speak); ≥ `SIGNER_CONF_LOW` (0.50) → `unsure` (amber "?" + top-2, not spoken); else `none`.
 
