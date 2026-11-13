@@ -10,7 +10,7 @@
 ## The entry
 - Hearing wearer (teacher, classmate, desk staff) in **Meta Ray-Ban Display**. Deaf signer signs at 1–1.5 m. Lens shows the sentence + confidence; TTS plays through the glasses speaker. The signer holds/sees the **Signer Card** (web page on a tablet/phone): consent Start/Stop, "Translation ON", what the glasses said (glosses + sentence + confidence), ✓/✗, "Not right", Teach a sign, delete taught signs, captions of the wearer's spoken reply (or typed reply).
 - **English only:** ASL → English text and speech. 24 visually distinct classroom ASL signs + REST.
-  - Picked mainly from the 250 signs of the Google Isolated Sign Language dataset (Kaggle `asl-signs`, MediaPipe landmarks).
+  - Picked mainly from PopSign ASL v1.0's 250 signs (CC BY 4.0; the same sign list as Kaggle `asl-signs`, which we can't download without a Kaggle account).
   - Signs missing from it are recorded by the team or added with Teach.
   - FinSL is dropped from the plan.
   - See `research/webapps-and-datasets.md`.
@@ -36,13 +36,10 @@ So:
   - An `AppContainer` that wires everything together.
   - A view-model that sends cards to the glasses only while the session is live.
   - Opt out of analytics in Info.plist.
-- **Platform: iOS (Swift) if a paid Apple team is confirmed, else Android (Kotlin, matching samples).**
-  - iOS is recommended because the lead's Mac has Xcode and the reference sample is iOS.
-  - A free Apple ID build connects but receives no frames (2nd-hand report, research/platform.md), so M0 decides.
-  - Only one platform is built.
+- **Platform: iOS (Swift).** The lead confirmed a paid Apple developer team and an iPhone on iOS 17.2+ (2026-11-13). This avoids the reported free-Apple-ID "no frames" problem, matches the reference sample, and uses the lead's Mac + Xcode. Android is not built.
 - **Without glasses:**
   - Mock Device Kit with `metaRayBanDisplay` (supported since DAT 1.0.0): an in-app preview, or an iOS Simulator build that streams the display to the Chrome "Meta Ray-Ban Display Simulator".
-  - A mock camera fed from a video file. On Android this is `setCameraFeed(video)`; on iOS the equivalent is checked in M0.
+  - A mock camera fed from a video file (Android has `setCameraFeed(video)`; the iOS equivalent is checked in M0).
 - **Web App = fallback and glasses-free demo surface.**
   - A 600×600 HTML page with WSS + `speechSynthesis`, installed by HTTPS URL / `fb-viewapp://` QR.
   - Used only if DAT Display can't run alongside the camera.
@@ -50,8 +47,9 @@ So:
 - **Signer Core: Python on a team laptop** — FastAPI + WebSocket relay, MediaPipe Hands + Pose (+ Face blendshapes for the question flag), shoulder-normalised features + hand joint angles, segmenter, kNN/DTW baseline → small GRU if it wins on held-out signer, gloss→English (deterministic templates; Claude Haiku 4.5 fluent mode on gloss text only, with validator), eval harness (leave-one-signer-out). Deps: `mediapipe`, `opencv-python`, `fastapi`, `uvicorn`, `numpy`, `torch` (have), `anthropic`.
 - **Signer Card: static web page** served by the core (QR to open).
 - **Recognition data:**
-  - Pretrain on Kaggle `asl-signs`: ~94k clips, 250 signs, landmarks already extracted. The licence must be confirmed in M0; PopSign v1.0 is CC BY 4.0 as backup.
-  - Then use kNN/fine-tuning on our own recordings.
+  - No Kaggle account (lead, 2026-11-13), so Kaggle `asl-signs` is out.
+  - **PopSign ASL v1.0** (CC BY 4.0, 47 signers): download only the 24 vocabulary signs, ~100 clips each (~2,400 clips), and run our own MediaPipe Holistic on them. Videos are deleted after extraction; only landmarks are kept. Extraction is split across the team's laptops. M0 finds out how the download works (whole archive vs per sign).
+  - Then kNN prototypes from PopSign + our own recordings; GRU only if it wins on held-out signers.
   - ASL Citizen (non-commercial) as an optional held-out test on unseen Deaf signers.
 - **Network:**
   - Phone ↔ laptop over **USB tethering**. The phone joins the glasses' Wi-Fi for streaming, so it can't also run a hotspot. Verified in M0.

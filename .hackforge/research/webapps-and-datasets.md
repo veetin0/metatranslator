@@ -105,6 +105,8 @@ Source: https://github.com/meta/meta-wearables-dat-ios/tree/main/samples/BirdSpo
 | MS-ASL | 1,000 signs, 25k samples, 222 signers | Annotations only | Research | Skip |
 | How2Sign | 80 h of continuous ASL + English | Video, keypoints (not MediaPipe) | CC BY-NC | Skip (continuous, too heavy) |
 
+**Update 2026-11-13 (lead):** no Kaggle account, so the Kaggle parquet is out. PopSign v1.0 (same 250 signs, CC BY 4.0) becomes the prior data: we download only the vocabulary signs and extract landmarks ourselves. Its download format is unconfirmed (M0).
+
 **Vocabulary impact:**
 - The Kaggle 250 signs are toddler "first words".
 - From memory, these overlap the classroom vocabulary: yes, no, please, thankyou, hello, bye, water, drink, hungry, thirsty, finish, wait, potty (bathroom), sick, read, book, pen, pencil, time, where, why, who, think, look, listen, talk, quiet, home, now, later, tomorrow, happy, sad.
