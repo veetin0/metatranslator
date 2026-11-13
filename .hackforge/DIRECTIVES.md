@@ -15,6 +15,8 @@ Team instructions. They override HackForge defaults, never an official rule.
 11. Meta's references for the build: Display Simulator, DAT getting-started docs, Web Apps docs, and the repos meta-wearables-webapp, meta-wearables-dat-ios, meta-wearables-dat-android. Pass them to every agent and crew member. Meta's plugins and docs MCP may be installed (source: lead, 2026-11-13).
 12. The Ray-Ban Display is available in 2-hour reservations: plan hardware work into booked slots and develop with Mock Device Kit + simulator between them. Pitch is 2 minutes, not in focus yet (source: lead, 2026-11-13).
 13. The lead's plan usage is low: give the remaining build, verify and research work to the crew. The lead's Claude keeps to merges, local-only data jobs and hardware steps (source: lead, [run] 2026-11-13).
+14. The full objective in challenge/prompts/OBJECTIVE.md is the target: record/stop by Neural Band gesture, REST video upload to FastAPI, OpenCV + MediaPipe Holistic + PyTorch LSTM over 10–20 signs with low-confidence rejection, Gemini Flash glosses → English, Gemini TTS audio returned to the Web App; no streaming, DB or auth unless necessary. Where the current plan differs, the objective wins once the lead approves the re-plan (source: lead, 2026-11-13).
+15. Split work across the whole crew so everyone's tokens are used, not the lead's: research, gap analysis, build and verify go to crew missions by default (source: lead, 2026-11-13).
 
 ## Lessons (advisory)
 - No saved lessons yet.
