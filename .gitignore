@@ -21,6 +21,8 @@ renders/cache/
 .hackforge/evidence/**/*.mov
 # PopSign videos: downloaded by script, deleted after landmark extraction
 data/popsign/raw/
+# raw landmark clips stay on the lead's Mac (65 MB > the team server's 40 MB); the crew uses data/popsign/features.npz
+data/popsign/landmarks/
 *.mp4
 !video/out/demo.mp4
 # Build output
