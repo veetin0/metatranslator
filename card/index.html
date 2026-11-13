@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#EFF6FF" />
+    <title>Signer Card</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="top">
+        <h1>Signer</h1>
+        <p id="chip" class="chip" role="status"><span class="chip-dot" aria-hidden="true"></span><span id="chip-text">Connecting…</span></p>
+      </header>
+
+      <section class="panel consent" aria-labelledby="consent-h">
+        <h2 id="consent-h" class="sr-only">Translation</h2>
+        <p id="light" class="light"><span class="light-dot" aria-hidden="true"></span><span id="light-text">Translation OFF</span></p>
+        <button id="start" class="btn btn-start" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          Start translating
+        </button>
+        <button id="stop" class="btn btn-stop" type="button" hidden>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+          Stop
+        </button>
+        <p class="help">Pressing Start is your consent. The camera turns off when you press Stop, after 2 minutes without signing, or when the glasses stop.</p>
+      </section>
+
+      <section class="panel latest" aria-labelledby="latest-h" aria-live="polite">
+        <h2 id="latest-h">Latest translation</h2>
+        <p id="partial" class="partial"></p>
+        <div id="latest"><p class="empty">Nothing yet. Press Start and sign.</p></div>
+      </section>
+
+      <section class="panel replies" aria-labelledby="replies-h" aria-live="polite">
+        <h2 id="replies-h">They said</h2>
+        <ol id="replies" class="list"><li class="empty">No replies yet.</li></ol>
+      </section>
+
+      <section class="panel history" aria-labelledby="history-h">
+        <h2 id="history-h">History <span id="stats" class="stats"></span></h2>
+        <ol id="history" class="list"><li class="empty">Your translations will appear here.</li></ol>
+      </section>
+
+      <footer class="privacy">
+        <p>Nothing is recorded. Camera frames are turned into hand and body points in memory and thrown away. Only the English words leave this laptop.</p>
+      </footer>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
