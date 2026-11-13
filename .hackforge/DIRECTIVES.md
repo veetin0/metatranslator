@@ -8,6 +8,8 @@ Team instructions. They override HackForge defaults, never an official rule.
 4. We have Meta glasses to use (source: challenge/brief/CHALLENGE.md, team note).
 5. Modalities: suggest — propose non-code deliverables only where they raise a criterion (source: hackforge.yaml `modalities`).
 6. allow / forbid / stack_preferences: none set (source: hackforge.yaml).
+7. Follow Meta's developer docs for how the app gets onto the glasses (Web App on the display); use Meta's display simulators so development doesn't need glasses and the web app transfers easily to the device (source: lead, [run] 2026-11-13).
+8. English only: sign-language datasets and output in English (ASL → English); FinSL dropped (source: lead, [run] 2026-11-13).
 
 ## Lessons (advisory)
 - No saved lessons yet.
