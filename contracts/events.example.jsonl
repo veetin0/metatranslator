@@ -2,7 +2,7 @@
 {"type":"state","state":"on","link":"ok","ts":1731520001000}
 {"type":"partial","gloss":"HELLO","confidence":0.62,"ts":1731520002000}
 {"type":"caption","id":"c1","text":"Hello, can I ask a question?","gloss":["HELLO","QUESTION"],"tier":"confirmed","confidence":0.86,"alternatives":[],"question":true,"mode":"template","speak":true,"ts":1731520003000}
-{"type":"caption","id":"c2","text":"Where is the book?","gloss":["WHERE","BOOK"],"tier":"unsure","confidence":0.64,"alternatives":[{"text":"Where is the paper?","gloss":["WHERE","PAPER"],"confidence":0.41}],"question":true,"mode":"template","speak":false,"ts":1731520006000}
+{"type":"caption","id":"c2","text":"Where is the book?","gloss":["WHERE","BOOK"],"tier":"unsure","confidence":0.64,"alternatives":[{"text":"Where is the water?","gloss":["WHERE","WATER"],"confidence":0.41}],"question":true,"mode":"template","speak":false,"ts":1731520006000}
 {"type":"caption","id":"c3","text":"Didn't catch that","gloss":[],"tier":"none","confidence":0.31,"alternatives":[],"question":false,"mode":"template","speak":false,"ts":1731520009000}
 {"type":"retract","id":"c2"}
 {"type":"reply","text":"Sure, it's on page 12","source":"stt","ts":1731520012000}
