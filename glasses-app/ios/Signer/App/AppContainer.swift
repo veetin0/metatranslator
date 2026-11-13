@@ -12,6 +12,7 @@ final class AppContainer {
   let client: CoreClient
   let pipeline: FramePipeline
   let speech: SpeechService
+  let recognizer: ReplyRecognizer
   let viewModel: SignerViewModel
 
   init() {
@@ -34,10 +35,12 @@ final class AppContainer {
     client = CoreClient(endpoints: CoreEndpoints(base) ?? CoreEndpoints(CoreEndpoints.defaultBase)!)
     pipeline = FramePipeline(client: client)
     speech = SpeechService()
+    recognizer = ReplyRecognizer()
     viewModel = SignerViewModel(
       session: session, camera: camera, display: display, mock: mock,
-      client: client, pipeline: pipeline, speech: speech, mockEnabled: wantsMock,
-      coreURL: base)
+      client: client, pipeline: pipeline, speech: speech, recognizer: recognizer,
+      mockEnabled: wantsMock, coreURL: base,
+      replySTTEnabled: AppFlags.replySTTEnabled(rawFlags: AppFlags.current(arguments: args)))
     if args.contains("--autostart") {
       Task { @MainActor [viewModel] in
         try? await Task.sleep(nanoseconds: 2_000_000_000)

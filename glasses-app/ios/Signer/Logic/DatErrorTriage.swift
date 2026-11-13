@@ -10,6 +10,8 @@ import Foundation
 enum DatErrorTriage {
   enum Kind: Equatable {
     case capabilityDenied
+    /// The wearer (or Meta AI app) declined a permission, e.g. camera.
+    case permissionDenied
     case noDevice
     case updateRequired
     case thermalOrPower
@@ -22,6 +24,9 @@ enum DatErrorTriage {
       || (t.contains("capabilit") && t.contains("denied"))
     {
       return .capabilityDenied
+    }
+    if t.contains("permission") && (t.contains("denied") || t.contains("declined")) {
+      return .permissionDenied
     }
     if t.contains("noeligibledevice") || t.contains("no eligible device")
       || t.contains("nodevicewithconnection")

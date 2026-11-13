@@ -47,6 +47,7 @@ struct CoreEndpoints: Equatable {
   var healthURL: URL { httpBase.appendingPathComponent("health") }
   var sessionStartURL: URL { httpBase.appendingPathComponent("session/start") }
   var sessionStopURL: URL { httpBase.appendingPathComponent("session/stop") }
+  var replyURL: URL { httpBase.appendingPathComponent("reply") }
 }
 
 /// Who asks the core to start or stop (CONTRACTS section 2, `by`).

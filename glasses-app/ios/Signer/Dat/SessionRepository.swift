@@ -37,6 +37,11 @@ final class SessionRepository {
   @ObservationIgnored var onSessionStarted: ((DeviceSession) -> Void)?
   /// The session ended (STOPPED), by us or by the device. `byUs` is true after `stopSession()`.
   @ObservationIgnored var onSessionEnded: ((_ byUs: Bool) -> Void)?
+  /// Every session / permission / registration error as verbatim text, for the app state
+  /// mapping (`AppSignals.apply(datError:)`).
+  @ObservationIgnored var onError: ((String) -> Void)?
+  /// The DAT device list changed (glasses paired, connected, gone).
+  @ObservationIgnored var onDevicesChanged: ((Int) -> Void)?
 
   @ObservationIgnored private let wearables: WearablesInterface
   /// Held from init (CameraAccess pattern): a selector built at tap time has not yet seen
@@ -69,6 +74,7 @@ final class SessionRepository {
         self.deviceIds = ids
         self.log.add("devices: \(ids.isEmpty ? "none" : ids.joined(separator: ", "))")
         self.watchFirstDevice(ids)
+        self.onDevicesChanged?(ids.count)
       }
     }
     watchFirstDevice(deviceIds)
@@ -237,6 +243,7 @@ final class SessionRepository {
   private func note(_ message: String) {
     lastError = message
     log.add(message)
+    onError?(message)
     if DatErrorTriage.classify(message) == .capabilityDenied {
       log.add("!! CAPABILITY_DENIED suspected: report to Meta (device, app version, time) immediately")
     }

@@ -253,6 +253,21 @@ final class CoreClient: NSObject, URLSessionWebSocketDelegate, @unchecked Sendab
     }
   }
 
+  /// `POST /reply {"text","source"}` (CONTRACTS section 2). Returns nil on success (2xx),
+  /// else a short reason for the screen.
+  func postReply(_ reply: ReplyRequest) async -> String? {
+    let endpoints = lock.withLock { self.endpoints }
+    do {
+      let (_, resp) = try await session.data(for: reply.urlRequest(endpoints: endpoints))
+      let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+      log.add("POST /reply source=\(reply.source.rawValue) -> \(code)")
+      return (200..<300).contains(code) ? nil : "core answered \(code)"
+    } catch {
+      log.add("POST /reply failed: \(error.localizedDescription)")
+      return "core not reachable"
+    }
+  }
+
   func health() async -> String {
     let url = lock.withLock { endpoints.healthURL }
     do {

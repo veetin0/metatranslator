@@ -100,6 +100,9 @@ targets:
           - _bonjour._tcp
         # Mock Device Kit can use the phone camera as the fake glasses camera.
         NSCameraUsageDescription: "Signer can use the phone camera as a stand-in for the glasses camera while testing without glasses."
+        # Reply by voice (M3.1): phone microphone + Apple Speech, on-device when available.
+        NSMicrophoneUsageDescription: "Signer listens while you hold the reply button, so your spoken reply can appear as a caption for the person you are talking to."
+        NSSpeechRecognitionUsageDescription: "Signer turns your spoken reply into text. Apple Speech runs on-device when your iPhone supports it. Signer does not store the audio."
         # ws:// to the tethered laptop (local network only).
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true

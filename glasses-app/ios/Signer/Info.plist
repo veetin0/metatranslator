@@ -71,6 +71,10 @@
 	<string>Signer can use the phone camera as a stand-in for the glasses camera while testing without glasses.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Signer streams the glasses camera to the Signer core on your laptop and receives captions back. Nothing leaves your local network.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Signer listens while you hold the reply button, so your spoken reply can appear as a caption for the person you are talking to.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Signer turns your spoken reply into text. Apple Speech runs on-device when your iPhone supports it. Signer does not store the audio.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

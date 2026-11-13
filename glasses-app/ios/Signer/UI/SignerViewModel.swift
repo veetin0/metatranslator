@@ -21,6 +21,9 @@ final class SignerViewModel {
   @ObservationIgnored private let client: CoreClient
   @ObservationIgnored private let pipeline: FramePipeline
   @ObservationIgnored private let speech: SpeechService
+  @ObservationIgnored private let recognizer: ReplyRecognizer
+  /// Seconds clock for the core_down window; injectable.
+  @ObservationIgnored private let now: () -> TimeInterval
 
   // MARK: Settings (screen)
   var coreURLText: String
@@ -33,7 +36,14 @@ final class SignerViewModel {
   private(set) var isRunning = false
   private(set) var streamPhase: StreamPhase = .stopped
   private(set) var displayState = "none"
-  private(set) var lensState: LensState = .off
+  /// The one state shown on the phone and the lens state line (D3).
+  private(set) var appState: AppState = .off
+  var lensState: LensState { appState.lensState }
+  /// Debug menu: the state forced for demo and screenshots, nil when none.
+  var debugState: AppState? { signals.debugOverride }
+  /// Reply box (hold to talk, typed fallback).
+  var reply = ReplyComposer()
+  let replySTTEnabled: Bool
   private(set) var framesLink: CoreClient.Link = .disconnected
   private(set) var eventsLink: CoreClient.Link = .disconnected
   private(set) var counters = FramePipeline.Snapshot(
@@ -61,12 +71,22 @@ final class SignerViewModel {
   @ObservationIgnored private var pinnedCard: LensCard?
   @ObservationIgnored private var captionReceivedAt: TimeInterval?
   @ObservationIgnored private var ticker: Task<Void, Never>?
+  @ObservationIgnored private var signals = AppSignals()
+  @ObservationIgnored private var coreMonitor = CoreLinkMonitor()
+  @ObservationIgnored private var coreCheck: Task<Void, Never>?
+  @ObservationIgnored private var reporter = StateReporter()
+  @ObservationIgnored private var talkHeld = false
 
   init(
     session: SessionRepository, camera: CameraRepository, display: DisplayRepository,
     mock: MockDeviceRepository, client: CoreClient, pipeline: FramePipeline,
-    speech: SpeechService, mockEnabled: Bool, coreURL: String
+    speech: SpeechService, recognizer: ReplyRecognizer, mockEnabled: Bool, coreURL: String,
+    replySTTEnabled: Bool = true,
+    now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
   ) {
+    self.recognizer = recognizer
+    self.replySTTEnabled = replySTTEnabled
+    self.now = now
     self.session = session
     self.camera = camera
     self.display = display
@@ -85,7 +105,10 @@ final class SignerViewModel {
     }
   }
 
-  isolated deinit { ticker?.cancel() }
+  isolated deinit {
+    ticker?.cancel()
+    coreCheck?.cancel()
+  }
 
   // MARK: Wiring
 
@@ -96,6 +119,19 @@ final class SignerViewModel {
 
     session.onSessionStarted = { [weak self] s in self?.sessionStarted(s) }
     session.onSessionEnded = { [weak self] byUs in self?.sessionEnded(byUs: byUs) }
+    session.onError = { [weak self] text in self?.datError(text) }
+    session.onDevicesChanged = { [weak self] count in
+      guard let self else { return }
+      self.signals.apply(deviceCount: count)
+      self.recompute()
+    }
+
+    recognizer.onPartial = { [weak self] text in self?.reply.updatePartial(text) }
+    recognizer.onFinal = { [weak self] text in
+      guard let self, let req = self.reply.finishListening(finalText: text) else { return }
+      self.post(req)
+    }
+    recognizer.onUnavailable = { [weak self] reason in self?.reply.speechUnavailable(reason) }
 
     camera.onFrameArrived = { [pipeline] in pipeline.noteArrived() }
     camera.onFrame = { [pipeline] jpeg, w, h in pipeline.submit(jpeg: jpeg, width: w, height: h) }
@@ -149,29 +185,49 @@ final class SignerViewModel {
   func startStream() {
     guard !isRunning else { return }
     isRunning = true
+    signals.beginStart()
+    coreMonitor.reset()
     applyCoreURL()
     pipeline.reset(source: mockEnabled ? .mock : .glasses)
     captionsReceived = 0
+    // D3 glasses off: nothing to stream from. Say so before asking for any permission.
+    if session.deviceIds.isEmpty {
+      log("start: no glasses connected")
+      abortStart(glassesOff: true)
+      return
+    }
+    recompute()
     Task {
       // Start is consent: the core refuses frames unless its session is on (CONTRACTS section 2).
       log(await client.postSession(start: true, by: .app))
       client.connect()
       speech.configureAudioSession()
       guard await session.ensureCameraPermission() else {
-        lensState = .permissionDenied
-        refreshLens()
-        isRunning = false
-        client.disconnect()
+        // D3 permission denied: the card says what to do (allow it in the Meta AI app).
+        signals.cameraPermission = .denied
+        abortStart()
         return
       }
-      lensState = .connecting
-      refreshLens()
+      signals.cameraPermission = .granted
+      recompute()
       if !session.startSession() {
-        isRunning = false
-        client.disconnect()
+        // The failure text decides: no eligible device is glasses off, denial is permission.
+        if let text = session.lastError { signals.apply(datError: text) }
+        abortStart()
         log(await client.postSession(start: false, by: .app))
       }
     }
+  }
+
+  /// A start that did not get going: back to idle, the fault (if any) stays on screen until
+  /// the next Start.
+  private func abortStart(glassesOff: Bool = false) {
+    isRunning = false
+    signals.end(byDevice: glassesOff)
+    coreMonitor.reset()
+    coreCheck?.cancel()
+    client.disconnect()
+    recompute()
   }
 
   func stopStream() {
@@ -237,8 +293,11 @@ final class SignerViewModel {
     isRunning = false
     pinnedCard = nil
     currentCaption = nil
-    lensState = .off
-    refreshLens()
+    // A STOPPED the wearer did not ask for means the glasses ended it (taken off, dropped).
+    signals.end(byDevice: !byUs)
+    coreMonitor.reset()
+    coreCheck?.cancel()
+    recompute()
     speech.stop()
     Task {
       // A device-side STOPPED resets consent: tell the core (CONTRACTS section 2, by:"device").
@@ -254,8 +313,8 @@ final class SignerViewModel {
       // The display is added next to the live camera on the same session: check (b).
       let result = display.attach(to: s)
       log("display attach result: \(result)")
-      if lensState == .connecting || lensState == .off { lensState = .on }
-      refreshLens()
+      if signals.base == .connecting || signals.base == .off { signals.base = .on }
+      recompute()
     }
   }
 
@@ -271,9 +330,93 @@ final class SignerViewModel {
     case .frames: framesLink = link
     case .events:
       eventsLink = link
-      if link == .coreDown {
-        lensState = .coreDown
-        refreshLens()
+      if link == .connected {
+        coreMonitor.socketUp()
+        reporter.reset()  // a fresh socket: the core has forgotten the app's state
+      } else if isRunning {
+        // Dropped, refused, or still retrying: the 2 s window starts at the first miss
+        // and is not restarted by reconnect attempts. CoreClient reconnects on its own.
+        coreMonitor.socketDown(at: now())
+      }
+      evaluateCoreLink()
+    }
+  }
+
+  /// core_down only after the events socket has been down for more than 2 s.
+  private func evaluateCoreLink() {
+    coreCheck?.cancel()
+    let t = now()
+    signals.coreDown = coreMonitor.isCoreDown(now: t)
+    recompute()
+    if let wait = coreMonitor.secondsUntilDown(now: t) {
+      coreCheck = Task { [weak self] in
+        try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+        guard !Task.isCancelled else { return }
+        self?.evaluateCoreLink()
+      }
+    }
+  }
+
+  // MARK: D3 states
+
+  private func datError(_ text: String) {
+    if signals.apply(datError: text) != nil { recompute() }
+  }
+
+  /// Debug menu: force a state on the phone and the lens (demo, screenshots). nil clears it.
+  func triggerDebug(_ state: AppState?) {
+    signals.debugOverride = state
+    log("debug: state forced to \(state?.rawValue ?? "none")")
+    recompute()
+  }
+
+  /// Resolves the one AppState from the signals, tells the core when it changed (flag-gated),
+  /// and redraws the card.
+  private func recompute() {
+    let next = AppStateResolver.resolve(signals)
+    if next != appState {
+      log("app state: \(appState.rawValue) -> \(next.rawValue)")
+      appState = next
+      if let m = reporter.message(for: next, nowMs: Int64(Date().timeIntervalSince1970 * 1000)) {
+        client.sendEvent(.appState(m))
+      }
+    }
+    refreshLens()
+  }
+
+  // MARK: Reply (hold to talk, typed fallback)
+
+  func replyPressBegan() {
+    guard replySTTEnabled, !reply.isBusy, !talkHeld else { return }
+    talkHeld = true
+    reply.beginListening()
+    Task {
+      await recognizer.start()
+      // Let go while the permission sheet was up: close the mic again.
+      if !talkHeld { recognizer.stop() }
+    }
+  }
+
+  func replyPressEnded() {
+    guard talkHeld else { return }
+    talkHeld = false
+    reply.endListening()
+    recognizer.stop()
+  }
+
+  func sendTypedReply() {
+    guard let req = reply.submitTyped() else { return }
+    post(req)
+  }
+
+  func dismissReplyMessage() { reply.clearMessage() }
+
+  private func post(_ req: ReplyRequest) {
+    Task {
+      if let failure = await client.postReply(req) {
+        reply.sendFailed(req, reason: failure)
+      } else {
+        reply.sendSucceeded(req)
       }
     }
   }
@@ -283,9 +426,9 @@ final class SignerViewModel {
   private func handle(_ event: CoreEvent) {
     switch event {
     case .state(let e):
-      lensState = e.state
+      signals.base = AppState(lens: e.state)
       if e.link == .slow { log("core: link slow") }
-      refreshLens()
+      recompute()
     case .caption(let c):
       captionsReceived += 1
       lastCaption = c
@@ -318,7 +461,10 @@ final class SignerViewModel {
   /// Rebuilds the card and offers it to the display (gated + throttled there).
   private func refreshLens() {
     let card: LensCard
-    if let pinnedCard {
+    if appState.isFault {
+      // D3: state line plus the plain next step wins over a caption or the Hello card.
+      card = .appState(appState, stats: stats)
+    } else if let pinnedCard {
       card = pinnedCard
     } else if let c = currentCaption {
       card = .caption(c, state: lensState, stats: stats)

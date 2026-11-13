@@ -144,12 +144,15 @@ enum ClientMessage {
   case hello(Client)
   case feedback(captionId: String, verdict: Verdict)
   case reply(text: String, source: String)
+  /// App to core state (flag-gated, see `AppFlags.sendStateToCore`).
+  case appState(StateMessage)
 
   var jsonString: String {
     switch self {
     case .hello(let c): return "{\"type\":\"hello\",\"client\":\"\(c.rawValue)\"}"
     case .feedback(let id, let v):
       return "{\"type\":\"feedback\",\"caption_id\":\(Self.quote(id)),\"verdict\":\"\(v.rawValue)\"}"
+    case .appState(let m): return m.jsonString
     case .reply(let text, let source):
       return "{\"type\":\"reply\",\"text\":\(Self.quote(text)),\"source\":\(Self.quote(source))}"
     }

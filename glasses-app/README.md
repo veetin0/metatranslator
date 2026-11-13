@@ -156,6 +156,27 @@ extension, `http://127.0.0.1:9000/`) works in the iOS Simulator only. The mock d
 the real Bluetooth/Wi-Fi bandwidth, the glasses' own refusal rules or the audio route; those are
 G1 checks.
 
+## M3.1: reply, D3 states, readout
+
+- **Reply**: the Reply section on the phone has a hold-to-talk button (Apple Speech on the phone
+  mic, on-device when supported, `Audio/ReplyRecognizer.swift`) and a typed field. Both
+  `POST /reply {text, source:"stt"|"typed"}` (`Logic/ReplyRequest.swift` builds and tests the
+  request). `MWDATSpeech` is not used (no such product in DAT 1.0.1 here). Needs the
+  microphone and speech permissions (Info.plist strings are in `project.yml`). `--flags teach`
+  (or env `SIGNER_FLAGS`) without `reply_stt` hides the mic button.
+- **D3 states**: `Logic/AppState.swift` resolves one `AppState` from camera permission, device
+  presence, DAT error triage, the events socket and the core's state. Precedence: debug override,
+  permission denied, glasses off, core down (only while running), core-reported state.
+  `core_down` = events socket down for MORE than 2 s (`CoreLinkMonitor`, injected clock), the
+  app reconnects by itself. Each fault shows on the phone and on the lens card (state line plus
+  one plain next step) while the DAT display is attached, i.e. while streaming. The **Debug:
+  trigger a state** section forces each one for demo and screenshots.
+- **Readout footer**: "17/19 confirmed" from `stats` events (DESIGN.md wording), through the
+  same 500 ms / on-change throttle as the caption.
+- **App to core state message** (contract change pending): `{"type":"state","state":"glasses_off"|
+  "permission_denied"|"on","link":"ok","ts":ms,"from":"app"}` on `/ws/events`, behind
+  `AppFlags.sendStateToCore` (false). Flip the constant after the lead approves the contract.
+
 ## Build and test
 
 ```bash

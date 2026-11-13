@@ -61,14 +61,31 @@ struct LensCard: Equatable {
       stateLine: state.label,
       lines: CaptionWrapper.lines(text),
       tone: tone,
-      footer: stats.map { "\($0.confirmed)/\($0.total) confirmed" })
+      footer: ReadoutFormat.footer(stats))
+  }
+
+  /// Card for a D3 fault (permission denied, glasses off, core down): state line on top and
+  /// the plain next step as the body, dim. Other states fall back to `state(_:stats:)`.
+  static func appState(_ s: AppState, stats: StatsEvent? = nil) -> LensCard {
+    guard let step = s.nextStep else { return .state(s.lensState, stats: stats) }
+    return LensCard(
+      stateLine: s.label, lines: CaptionWrapper.lines(step), tone: .dim,
+      footer: ReadoutFormat.footer(stats))
   }
 
   /// Card with no caption, only the state line (connecting, core down, ...).
   static func state(_ state: LensState, stats: StatsEvent? = nil) -> LensCard {
     LensCard(
       stateLine: state.label, lines: [], tone: .dim,
-      footer: stats.map { "\($0.confirmed)/\($0.total) confirmed" })
+      footer: ReadoutFormat.footer(stats))
+  }
+}
+
+/// Readout footer text from `stats` events: "17/19 confirmed" (DESIGN.md Lens: readout footer
+/// bottom-centre). nil before the first stats event.
+enum ReadoutFormat {
+  static func footer(_ stats: StatsEvent?) -> String? {
+    stats.map { "\($0.confirmed)/\($0.total) confirmed" }
   }
 }
 

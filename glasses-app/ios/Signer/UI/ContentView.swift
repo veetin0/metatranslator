@@ -12,6 +12,8 @@ struct ContentView: View {
       List {
         streamSection
         lensSection
+        replySection
+        debugSection
         countersSection
         statusSection
         coreSection
@@ -92,6 +94,71 @@ struct ContentView: View {
     }
   }
 
+  // MARK: Reply (M3.1)
+
+  private var replySection: some View {
+    Section("Reply") {
+      if model.replySTTEnabled {
+        HoldToTalkButton(
+          phase: model.reply.phase,
+          onPress: { model.replyPressBegan() },
+          onRelease: { model.replyPressEnded() })
+        if !model.reply.partial.isEmpty {
+          Text(model.reply.partial).font(.body)
+        }
+      }
+      HStack {
+        TextField("Type a reply", text: $model.reply.typed)
+          .submitLabel(.send)
+          .onSubmit { model.sendTypedReply() }
+        Button("Send") { model.sendTypedReply() }
+          .buttonStyle(.bordered)
+          .disabled(!model.reply.canSendTyped)
+      }
+      replyMessage
+    }
+  }
+
+  @ViewBuilder private var replyMessage: some View {
+    switch model.reply.phase {
+    case .sent(let text):
+      Label("Sent: \(text)", systemImage: "checkmark.circle").font(.footnote)
+    case .failed(let reason), .unavailable(let reason):
+      Label(reason, systemImage: "exclamationmark.triangle")
+        .font(.footnote).foregroundStyle(.orange)
+    case .sending:
+      Label("Sending...", systemImage: "paperplane").font(.footnote)
+    case .processing:
+      Label("Got it, finishing...", systemImage: "waveform").font(.footnote)
+    case .idle, .listening:
+      EmptyView()
+    }
+  }
+
+  // MARK: Debug: trigger a state (demo, screenshots)
+
+  private var debugSection: some View {
+    Section {
+      ForEach([AppState.permissionDenied, .glassesOff, .coreDown], id: \.self) { s in
+        Button {
+          model.triggerDebug(s)
+        } label: {
+          HStack {
+            Text(s.label)
+            Spacer()
+            if model.debugState == s { Image(systemName: "checkmark") }
+          }
+        }
+      }
+      Button("Clear forced state") { model.triggerDebug(nil) }
+        .disabled(model.debugState == nil)
+    } header: {
+      Text("Debug: trigger a state")
+    } footer: {
+      Text("Forces the state on this screen and on the lens card (the lens shows it while streaming).")
+    }
+  }
+
   // MARK: Core
 
   private var coreSection: some View {
@@ -113,6 +180,10 @@ struct ContentView: View {
       row("Frames socket", "\(model.framesLink)")
       row("Events socket", "\(model.eventsLink)")
       row("Lens state", model.lensState.label)
+      if let step = model.appState.nextStep {
+        Label(step, systemImage: "exclamationmark.triangle.fill")
+          .font(.footnote).foregroundStyle(.orange)
+      }
     }
   }
 
@@ -188,6 +259,41 @@ struct ContentView: View {
   private func rtt(_ last: Double?, _ worst: Double) -> String {
     guard let last else { return "none" }
     return String(format: "%.0f / %.0f ms", last, worst)
+  }
+}
+
+/// Press and hold to talk; release to send. Touch-down and release come from a zero-length
+/// long press, so no drag distance cancels it. VoiceOver gets a plain toggle action.
+struct HoldToTalkButton: View {
+  let phase: ReplyComposer.Phase
+  let onPress: () -> Void
+  let onRelease: () -> Void
+  @State private var held = false
+
+  private var listening: Bool { phase == .listening }
+
+  var body: some View {
+    Label(listening ? "Listening... release to send" : "Hold to talk",
+          systemImage: listening ? "mic.fill" : "mic")
+      .frame(maxWidth: .infinity, minHeight: 56)
+      .foregroundStyle(.white)
+      .background(listening ? Color.red : Color.accentColor, in: RoundedRectangle(cornerRadius: 12))
+      .contentShape(Rectangle())
+      .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { down in
+        if down, !held {
+          held = true
+          onPress()
+        } else if !down, held {
+          held = false
+          onRelease()
+        }
+      }, perform: {})
+      .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+      .accessibilityLabel("Hold to talk")
+      .accessibilityAddTraits(.isButton)
+      .accessibilityAction(named: listening ? "Stop and send" : "Start talking") {
+        if listening { onRelease() } else { onPress() }
+      }
   }
 }
 
