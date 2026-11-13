@@ -1,0 +1,11 @@
+# State
+- Phase: 1 understand → 3 design (Harness team run: plan only; stop at plan checkpoint)
+- Profile: lean (plan: pro → lean per profiles.md; fable_ok false) · Models: research sonnet / architect opus / judge sonnet / build sonnet / craft sonnet / verify haiku / advisor opus
+- Limits: ≤2 local agents at once; research + architects dispatched to crew (3 ready) to save lead usage. Loop max 12 iterations, target 8.5. Verify: quick per iteration, blind judge final only.
+- Deadline: 2026-11-15T10:00+02:00 · Started kickoff 2026-11-13
+- Current milestone / wave: kickoff
+- Done: INVENTORY, DIRECTIVES, BRIEF, RULES
+- Next: crew research (platform, sign recognition, prior art/possibilities) → 2 architects → judge → DECISION, PLAN
+- Best metric vs baseline: — · Latest mock score: —
+- Escalations / de-escalations: none
+- Risks & open questions: camera access path on Ray-Ban Display (web app vs DAT); sign recognition accuracy; device availability at judging (see BRIEF Q1–Q4)
