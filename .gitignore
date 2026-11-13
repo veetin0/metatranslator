@@ -1,0 +1,21 @@
+# Secrets
+.env
+.env.*
+!.env.example
+# Files Claude must not read (Harness → Setup → Private files)
+private/
+# Tooling
+node_modules/
+.venv/
+__pycache__/
+*.blend1
+renders/cache/
+# HackForge per-machine files
+.hackforge/LOOP.json
+.hackforge/STOP_LOOP
+.hackforge/.gate-*
+.hackforge/.guard-errors.log
+.hackforge/RESUME.md
+.hackforge/evidence/
+evals/results/
+.DS_Store

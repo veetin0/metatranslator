@@ -1,0 +1,24 @@
+# HackForge configuration, written by Harness's team run. Every field is optional.
+
+challenge: "MetaTranslator"
+deadline: "2026-11-15T10:00:00+02:00"
+hours: 38
+team: 4
+
+# pro → lean profile: Sonnet for most work, never Fable.
+plan: pro
+fable_ok: false
+profile: auto
+
+loop:
+  enabled: true
+  reserve_minutes: 90
+  plateau: 3
+
+# Harness asks the lead once, when the plan is ready (the Plan step).
+checkpoints: [plan]
+
+modalities: suggest
+allow: []
+forbid: []
+stack_preferences: []
