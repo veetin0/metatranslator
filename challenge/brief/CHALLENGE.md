@@ -1,8 +1,3 @@
-# The challenge
-
-<!-- Paste everything about the challenge here: the brief, the rules, how it's judged, the deadline,
-     links. Or drop the organisers' files (PDFs, docs, screenshots) next to this file. -->
-
 The Challenge
 Demonstrate how a first-person field of view enables new or better interactions in everyday scenarios.
 
@@ -48,3 +43,20 @@ Technical execution
 Real-world value and feasibility
 (25%)
 User experience: input, accessibility and trust (25%)
+
+Build Signer, an AI-powered communication tool that translates sign language into text and spoken language for hearing people trough the classes.
+
+A deaf person signs naturally in front of a person wearing Meta Ray-Ban Display glasses.
+
+The system:
+
+Captures the signing person’s movements through a camera.
+Recognizes sign language gestures and expressions.
+Converts recognized signs into understandable text.
+Displays the translated text on Meta smart glasses.
+Plays the translated message through text-to-speech.
+The goal is to make communication between deaf and hearing people more accessible.
+
+Find out what are the best tools to use on this, how we can build this, how can this be put as a real app on the glasses.
+
+We have meta glasses to use
