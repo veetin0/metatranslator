@@ -122,6 +122,15 @@ def test_teach_is_off_without_the_flag(classifier, tmp_path):
     assert flags({"SIGNER_FLAGS": "llm, Teach"}) == {"llm", "teach"} and flags({}) == set()
 
 
+def test_create_app_installs_teach_only_with_the_flag(classifier, tmp_path, monkeypatch):
+    monkeypatch.setenv("SIGNER_DATA_DIR", str(tmp_path))
+    off = TestClient(create_app(classifier=classifier, landmarker=fake_landmarker, card_dir=str(tmp_path)))
+    assert off.get("/teach").status_code == 404 and getattr(off.app.state.relay, "teach", None) is None
+    monkeypatch.setenv("SIGNER_FLAGS", "teach")
+    on = TestClient(create_app(classifier=classifier, landmarker=fake_landmarker, card_dir=str(tmp_path)))
+    assert on.get("/teach").json() == {"taught": []}
+
+
 def test_teach_routes_win_over_the_card_mount(classifier, tmp_path):
     (tmp_path / "index.html").write_text("<h1>card</h1>", encoding="utf-8")
     client, _ = teach_client(classifier, tmp_path)

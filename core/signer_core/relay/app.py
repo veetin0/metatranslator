@@ -337,6 +337,8 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
                 data = msg.get("bytes")
                 if data is None:
                     continue
+                if ws not in relay.frame_sockets:  # Stop already closed this socket
+                    break
                 if not relay.session.is_on:
                     await ws.close(code=CLOSE_CONSENT, reason="consent_required")
                     break
@@ -362,6 +364,8 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
                 await relay.check_idle()
         except WebSocketDisconnect:
             pass
+        except RuntimeError as e:  # a send raced with Stop closing the socket
+            log.info("frames socket closed: %s", e)
         finally:
             relay.frame_sockets.discard(ws)
             if relay.session.is_on:
@@ -375,6 +379,10 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
         async def fallback_card():
             return FALLBACK_CARD
 
+    from .feedback import flags, install  # Teach-a-sign (M3.3) behind SIGNER_FLAGS=teach
+
+    if "teach" in flags(os.environ):
+        install(app, relay, enabled=True)
     return app
 
 

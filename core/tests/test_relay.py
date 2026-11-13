@@ -180,6 +180,29 @@ def test_phrase_tiers_alternatives_and_none():
     assert pb.add(pred("YES", 0.9)) is None and pb.tick(500 + 1199) is None and pb.tick(500 + 1200)["text"] == "Yes."
 
 
+class FakeHaiku:
+    def __init__(self, reply):
+        self.reply, self.prompts = reply, []
+
+    def complete(self, prompt):
+        self.prompts.append(prompt)
+        return self.reply
+
+
+def test_caption_uses_fluent_mode_and_falls_back_on_rejection():
+    from signer_core.language import FluentTranslator
+
+    llm = FakeHaiku("Hi, may I ask a question?")
+    pb = PhraseBuilder(translator=FluentTranslator(client=llm, env={"SIGNER_LLM": "haiku"}))
+    c = pb.caption([pred("HELLO", 0.9), pred("QUESTION", 0.64)], "c1")
+    assert c["mode"] == "llm" and c["text"] == "Hi, may I ask a question?" and c["question"]
+    assert llm.prompts == ["Glosses: HELLO QUESTION(unsure)\nIt is a question."]  # gloss text only
+    llm.reply = "Hello, can I ask the doctor a question?"  # adds a content word: rejected
+    c = pb.caption([pred("HELLO", 0.9), pred("QUESTION", 0.9)], "c2")
+    assert c["mode"] == "template" and c["text"] == "Hello, can I ask a question?"
+    assert PhraseBuilder().caption([pred("YES", 0.9)], "c3")["mode"] == "template"  # off by default
+
+
 @pytest.mark.parametrize("gloss,text,question", [
     (["HELLO", "QUESTION"], "Hello, can I ask a question?", True),
     (["WHERE", "BOOK"], "Where is the book?", True),

@@ -11,7 +11,7 @@ from __future__ import annotations
 import threading
 
 from ..contracts import NONE_TEXT, REST, tier_for
-from ..language import ENGLISH, to_english
+from ..language import ENGLISH, FluentTranslator, to_english
 from ..model import Prediction, Recognizer
 from .session import now_ms
 
@@ -52,9 +52,11 @@ class JpegLandmarker:
 
 
 class PhraseBuilder:
-    def __init__(self, english: dict[str, str] | None = None, gap_ms: int = 1200, max_signs: int = 6):
+    def __init__(self, english: dict[str, str] | None = None, gap_ms: int = 1200, max_signs: int = 6,
+                 translator: FluentTranslator | None = None):
         self.english = english or ENGLISH
         self.gap_ms, self.max_signs = gap_ms, max_signs
+        self.translator = translator or FluentTranslator(english=self.english)  # template unless SIGNER_LLM=haiku
         self._preds: list[Prediction] = []
         self._n = 0
 
@@ -92,7 +94,10 @@ class PhraseBuilder:
         confs = [p.confidence for p in kept]
         conf = min(confs)
         tier = tier_for(conf)
-        text, question = to_english(gloss, self.english)
+        self.translator.english = self.english  # Teach may have swapped in a map with taught signs
+        unsure = [p.gloss for p in kept if p.tier == "unsure"]
+        out = self.translator(gloss, unsure=unsure)
+        text, question = out.text, out.question
         weakest = confs.index(conf)
         others = min((c for i, c in enumerate(confs) if i != weakest), default=1.0)
         alternatives = []
@@ -103,7 +108,7 @@ class PhraseBuilder:
                 alternatives.append({"text": alt_text, "gloss": alt, "confidence": round(min(c, others), 3)})
         return {"type": "caption", "id": cid, "text": text, "gloss": gloss, "tier": tier,
                 "confidence": round(conf, 3), "alternatives": alternatives[:2], "question": bool(question),
-                "mode": "template", "speak": tier == "confirmed", "ts": now_ms()}
+                "mode": out.mode, "speak": tier == "confirmed", "ts": now_ms()}
 
 
 class Pipeline:
