@@ -112,7 +112,7 @@
     <div class="arrow">→</div>
     <div class="step"><b>Holistic landmarks</b><span>Glasses camera → phone → laptop. MediaPipe hand and pose points; the frame is dropped from memory.</span></div>
     <div class="arrow">→</div>
-    <div class="step"><b>Temporal classifier</b><span>Sign segments classified over time, with a confidence score.</span></div>
+    <div class="step"><b>Temporal classifier</b><span>A small recurrent network (BiGRU) reads each sign over time and gives every guess a confidence score.</span></div>
     <div class="arrow">→</div>
     <div class="step"><b>Captions</b><span>Glosses become an English sentence on the lens and the card.</span></div>
   </div>
@@ -129,22 +129,22 @@
   <h2>Measured on signers the model never saw.</h2>
   <div class="nums">
     <div class="num">
-      <div class="v">0.51</div>
-      <div class="l">top-1, kNN baseline</div>
-      <div class="n">Leave-one-signer-out on 7,996 PopSign ASL clips, 20 signs.</div>
-    </div>
-    <div class="num">
       <div class="v">0.95</div>
-      <div class="l">top-1, BiGRU (top-3: 0.99)</div>
-      <div class="n">5 signer-disjoint folds, same 7,996 clips.</div>
+      <div class="l">top-1 on 24 signs (top-3: 0.99)</div>
+      <div class="n">BiGRU, 5 signer-disjoint folds, 7,995 PopSign ASL clips. A nearest-neighbour baseline scored 0.51.</div>
     </div>
     <div class="num">
-      <div class="v" style="font-size:40px; line-height:64px">5 reps</div>
-      <div class="l">per sign to teach it</div>
-      <div class="n">Taught on the glasses camera; recognised live in our first tests.</div>
+      <div class="v">98.6%</div>
+      <div class="l">right when it is sure</div>
+      <div class="n">Of the signs it is at least 80% confident about, 98.6% are correct. That covers 91% of signs; the rest show amber.</div>
+    </div>
+    <div class="num">
+      <div class="v">84%</div>
+      <div class="l">on a camera it never trained on</div>
+      <div class="n">203 WLASL clips from other signers: 0.52 with PopSign alone, 0.84 after adding ASL Citizen. 96% right when sure.</div>
     </div>
   </div>
-  <p class="muted" style="font-size:20px">Chance on 20 signs is 1 in 20. On WLASL clips from other cameras and signers, never trained on: 0.52 with PopSign alone, 0.84 once ASL Citizen is added. Accuracy from the glasses' own view is not yet measured at scale.</p>
+  <p class="muted" style="font-size:20px">Chance on 24 signs is 1 in 24. Accuracy from the glasses' own camera is not measured at scale: 0.93 on 28 held-out glasses reps, but the same people trained it, so treat that as optimistic.</p>
   <div class="foot"><span>Signer</span><span>5 / 8</span></div>
 </section>
 
@@ -178,7 +178,8 @@
     <ul>
       <li>iOS app on DAT: one session holds the glasses camera and the display.</li>
       <li>Caption cards on the 600×600 lens; speech through the glasses speaker.</li>
-      <li>Phone to laptop over USB; captions never leave the local network.</li>
+      <li>Phone to laptop over USB or local Wi-Fi; captions never leave the local network.</li>
+      <li>A browser demo runs the same model on your own device, so anyone can try it with a webcam; nothing is uploaded.</li>
     </ul>
     <div class="panel">
       <p><b>Fallback</b></p>
@@ -197,7 +198,7 @@
     <li>Full signer-disjoint evaluation, and a test on new Deaf signers before any claim.</li>
     <li>Teach-a-sign lets each pair add the words they actually use.</li>
   </ul>
-  <p class="muted" style="font-size:18px; margin-top:auto">Data: PopSign ASL v1.0, Georgia Tech / Deaf Professional Arts Network (Thad Starner et al.), CC BY 4.0, signdata.cc.gatech.edu. Only landmarks derived from the videos are kept.</p>
+  <p class="muted" style="font-size:16px; margin-top:auto; margin-bottom:28px">Data: PopSign ASL v1.0, Georgia Tech / Deaf Professional Arts Network (Thad Starner et al.), CC BY 4.0, signdata.cc.gatech.edu. Also ASL Citizen (Microsoft and Boston University) and WLASL, both non-commercial research use only. Only landmarks derived from the videos are kept.</p>
   <div class="foot"><span>Signer</span><span>8 / 8</span></div>
 </section>
 
