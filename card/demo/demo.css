@@ -31,8 +31,7 @@ h2{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--colo
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:#cbd5e1;max-width:52ch;cursor:pointer}
 .consent input,.toggle input{width:20px;height:20px;accent-color:var(--color-primary);margin:2px 0 0;flex:none}
 .signing{position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(11,18,32,.72);color:#fff;font-weight:500;font-size:14px}
-.signing .dot{width:9px;height:9px;border-radius:50%;background:#fbbf24;animation:pulse 1s var(--ease) infinite}
-@keyframes pulse{50%{opacity:.35}}
+.signing .dot{width:9px;height:9px;border-radius:50%;background:#fbbf24}
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:12px}
 .toggle{display:flex;gap:8px;align-items:center;cursor:pointer;min-height:44px}
 .btn{font:500 16px var(--sans);min-height:48px;padding:0 22px;border-radius:var(--r-sm);border:0;cursor:pointer;transition:transform .12s var(--ease),opacity .2s}
