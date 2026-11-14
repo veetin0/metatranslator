@@ -136,6 +136,9 @@ def predict_tta(pool, net, mean, std, clips):
     return np.mean([predict(net, mean, std, F[:, i]) for i in range(F.shape[1])], axis=0)
 
 
+HIDDEN = 128  # GRU width; --hidden, saved in the checkpoint
+
+
 def train(X, Y, classes, epochs=18, seed=0):
     import torch
     import torch.nn.functional as F
@@ -145,7 +148,7 @@ def train(X, Y, classes, epochs=18, seed=0):
     mean, std = X.reshape(-1, FEATURE_DIM).mean(0), X.reshape(-1, FEATURE_DIM).std(0) + 1e-3
     Xt = torch.tensor((X - mean) / std, dtype=torch.float32)
     yt = torch.tensor([classes.index(g) for g in Y])
-    net = make_model(len(classes)).to(dev)
+    net = make_model(len(classes), HIDDEN).to(dev)
     opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-2)
     steps = epochs * ((len(Xt) + 255) // 256)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=3e-3, total_steps=steps)
@@ -211,7 +214,10 @@ def main():
     ap.add_argument("--out", help="write the pooled cv result as eval/results-style JSON")
     ap.add_argument("--aug", type=int, default=4)
     ap.add_argument("--epochs", type=int, default=18)
+    ap.add_argument("--hidden", type=int, default=128)
     args = ap.parse_args()
+    global HIDDEN
+    HIDDEN = args.hidden
     vocab, pop, taught = load_all()
     classes = sorted(vocab)
     cz = load_citizen(vocab) if (args.citizen or args.citizencv) else []
@@ -330,7 +336,7 @@ def main():
 
         out = DATA / "models"
         out.mkdir(exist_ok=True)
-        torch.save({"state": net.state_dict(), "mean": mean, "std": std, "classes": classes}, out / "gru.pt")
+        torch.save({"state": net.state_dict(), "mean": mean, "std": std, "classes": classes, "hidden": HIDDEN}, out / "gru.pt")
         print("saved", out / "gru.pt", f"({time.time() - t0:.0f}s)")
 
 

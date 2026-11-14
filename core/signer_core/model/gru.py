@@ -51,7 +51,7 @@ class GRUClassifier:
         self.tta = os.environ.get("SIGNER_TTA", "0") == "1"
 
         ck = torch.load(path, map_location="cpu", weights_only=False)
-        self.net = make_model(len(ck["classes"]))
+        self.net = make_model(len(ck["classes"]), ck.get("hidden", 128))
         self.net.load_state_dict(ck["state"])
         self.net.eval()
         self.mean, self.std = ck["mean"], ck["std"]

@@ -69,7 +69,9 @@ def main():
     ap.add_argument("--pop-cap", type=int, default=150, help="max PopSign clips per gloss")
     ap.add_argument("--weight", type=int, default=12)
     ap.add_argument("--limit-glosses", type=int, default=0, help="smoke test: first N glosses only")
+    ap.add_argument("--hidden", type=int, default=256, help="GRU width (600 classes need more than the 24-sign 128)")
     a = ap.parse_args()
+    tg.HIDDEN = a.hidden
     t0 = time.time()
     vocab = vocab_large()
     if a.limit_glosses:
@@ -129,7 +131,7 @@ def main():
         net, mean, std = fit(cz, pop, taught, 1)
         out = DATA / "models"
         out.mkdir(exist_ok=True)
-        torch.save({"state": net.state_dict(), "mean": mean, "std": std, "classes": classes}, out / "gru_large.pt")
+        torch.save({"state": net.state_dict(), "mean": mean, "std": std, "classes": classes, "hidden": tg.HIDDEN}, out / "gru_large.pt")
         print("saved", out / "gru_large.pt", f"({time.time() - t0:.0f}s)")
     print("done")
 
