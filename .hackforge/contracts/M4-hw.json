@@ -1,0 +1,25 @@
+{
+  "schema": "hackforge-contract.v1",
+  "milestone": "M4-hw",
+  "goal": "Hardware half of M4, split off by the lead (2026-11-14): the backup demo video cut from real rehearsal footage on the glasses.",
+  "covers": ["D4"],
+  "time_box": "During the glasses slot, after the 3 rehearsals (M4 D5); render on the lead's Mac (ffmpeg)",
+  "prerequisites": [
+    "M4.2 pipeline merged (video/README.md has the one render command and the footage list)",
+    "Real footage recorded in the glasses slot, at the paths in the footage manifest",
+    "Voice: ElevenLabs Jessica (cgSgspJ2msm6clMCkdW9), eleven_v3; never Eric"
+  ],
+  "owned": [
+    "video/**"
+  ],
+  "dod": [
+    {"id": "D4", "check": "Demo video exists and is 60-90 s", "command": "python -c \"import subprocess;d=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0','video/out/demo.mp4']));assert 60<=d<=90,d\""}
+  ],
+  "validation_commands": [],
+  "risk": [],
+  "max_iterations": 3,
+  "status": "todo",
+  "tasks": [
+    {"id": "M4hw.1", "role": "craft:video", "title": "Render the demo video from real rehearsal footage with the M4.2 pipeline", "owned": ["video/**"], "owner": "agent", "machine": "lead's Mac (ffmpeg)", "dod_ids": ["D4"]}
+  ]
+}
