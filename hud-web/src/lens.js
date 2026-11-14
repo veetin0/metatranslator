@@ -3,7 +3,7 @@
 export const MAX_CHARS = 24;
 export const MAX_LINES = 2;
 
-const STATE_LABEL = {
+export const STATE_LABEL = {
   off: "Signer OFF",
   connecting: "Connecting…",
   on: "Signer ON",
@@ -12,7 +12,7 @@ const STATE_LABEL = {
   permission_denied: "Permission denied",
   core_down: "Core down",
 };
-const ALERT = new Set(["permission_denied", "core_down"]);
+export const ALERT = new Set(["permission_denied", "core_down"]);
 
 // Lucide "triangle-alert", inline (no icon font, first load < 300 KB)
 const ALERT_ICON =
