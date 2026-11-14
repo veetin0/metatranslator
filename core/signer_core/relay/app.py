@@ -238,6 +238,16 @@ class Relay:
         return changed
 
 
+def pose_points(f75) -> list:
+    """75 landmarks (33 pose, 21 left hand, 21 right hand) -> [[x, y] | None] in image coordinates (0..1)."""
+    if f75 is None:
+        return []
+    import numpy as np
+
+    f = np.asarray(f75, dtype=np.float32)
+    return [None if np.isnan(p[:2]).any() else [round(float(p[0]), 4), round(float(p[1]), 4)] for p in f]
+
+
 def create_app(classifier=None, landmarker=None, data_dir: str | None = None, card_dir: str | None = None,
                idle_stop_s: float | None = None, phrase_gap_ms: int = 1200, clock=time.monotonic) -> FastAPI:
     relay = Relay(classifier, landmarker, data_dir, idle_stop_s, phrase_gap_ms, clock)
@@ -360,6 +370,9 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
                 except ValueError as e:
                     log.info("frame %s skipped: %s", header.get("seq"), e)
                     continue
+                if header.get("pose"):  # demo page: send the landmarks back to this socket for the skeleton overlay
+                    await ws.send_text(json.dumps({"type": "pose", "seq": header.get("seq"), "active": relay.pipeline.active,
+                                                   "p": pose_points(relay.pipeline.last_f75)}))
                 if relay.session.is_on:  # Stop may have landed while the frame was processed
                     await relay.emit(events)
                 await relay.check_idle()

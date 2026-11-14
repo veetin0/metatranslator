@@ -127,6 +127,12 @@ class Pipeline:
         self.on_segment = on_segment  # called on every recognised segment (session idle timer)
         self._lock = threading.Lock()
         self.frames = 0
+        self.last_f75 = None
+
+    @property
+    def active(self) -> bool:
+        """A sign is in progress (the Segmenter has an open segment)."""
+        return bool(self.recognizer and self.recognizer.segmenter.active)
 
     def set_classifier(self, classifier) -> None:
         with self._lock:
@@ -135,6 +141,7 @@ class Pipeline:
 
     def push_jpeg(self, header: dict, jpeg: bytes) -> list[dict]:
         f75 = self.landmarker(jpeg, header)
+        self.last_f75 = f75  # the demo page draws it back over the camera (header "pose": true)
         if os.environ.get("SIGNER_DEBUG_FRAMES"):
             self._debug(header, jpeg, f75)
         return self.push_landmarks(f75, int(header.get("ts_ms", 0)))
@@ -181,7 +188,8 @@ class Pipeline:
             self.on_segment()
         if pred.gloss == REST:
             return []
-        out = [{"type": "partial", "gloss": pred.gloss, "confidence": round(pred.confidence, 3), "ts": now_ms()}]
+        out = [{"type": "partial", "gloss": pred.gloss, "confidence": round(pred.confidence, 3), "tier": pred.tier,
+                "top": [[g, round(c, 3)] for g, c in pred.top[:3] if g != REST], "ts": now_ms()}]
         cap = self.phrases.add(pred)
         return out + ([cap] if cap else [])
 

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signer · try it live</title>
+<link rel="stylesheet" href="demo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e40af'/%3E%3Cpath d='M9 22c4 3 10 3 14-1M11 12v5M16 9v8M21 11v6' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<body>
+<header class="top">
+  <div class="brand"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1e40af"/><path d="M9 22c4 3 10 3 14-1M11 12v5M16 9v8M21 11v6" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg><div><h1>Signer</h1><p>ASL → English, live in your browser</p></div></div>
+  <div id="status" class="pill off" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="status-text">Camera off</span></div>
+</header>
+
+<main class="layout">
+  <section class="stage-wrap" aria-label="Camera">
+    <div class="stage" id="stage">
+      <video id="v" autoplay muted playsinline></video>
+      <canvas id="sk" aria-hidden="true"></canvas>
+      <div class="signing" id="signing" hidden><span class="dot" aria-hidden="true"></span>Signing…</div>
+      <div class="empty" id="empty">
+        <p class="empty-title">See what Signer sees</p>
+        <p>Turn on your camera. Signer tracks your hands and body, draws the skeleton it reads, and translates each sign as you make it.</p>
+        <label class="consent"><input type="checkbox" id="consent"> Frames go to the Signer server, are processed live and never stored.</label>
+        <button id="go" class="btn primary" disabled>Turn on camera</button>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="stop" class="btn danger" disabled>■ Stop</button>
+      <label class="toggle"><input type="checkbox" id="speak" checked> Speak captions</label>
+      <label class="toggle"><input type="checkbox" id="showsk" checked> Show skeleton</label>
+      <span id="fps" class="muted"></span>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <section class="card now" aria-live="polite">
+      <h2>Last sign</h2>
+      <div class="gloss placeholder" id="gloss">Waiting for a sign</div>
+      <div class="tier" id="tier"></div>
+      <ol class="bars" id="bars" aria-label="Top guesses"></ol>
+    </section>
+    <section class="card">
+      <h2>Translation</h2>
+      <p class="caption" id="caption" aria-live="polite">Your sentence appears here after a short pause.</p>
+      <ul class="history" id="history" aria-label="Earlier translations"></ul>
+    </section>
+    <section class="card">
+      <h2>Try these signs</h2>
+      <p class="muted small">Start with your hands down, sign once, then lower your hands. Pause ~1 s to finish a sentence.</p>
+      <ul class="chips" id="chips"></ul>
+    </section>
+  </aside>
+</main>
+<footer class="foot muted small">Recognises 24 everyday ASL signs (research model, not a certified interpreter). Confidence: <b class="ok">✓ sure ≥ 80%</b> · <b class="warn">? unsure 50–80%</b> · below 50% is not shown.</footer>
+<script src="demo.js"></script>
+</body>
+</html>
