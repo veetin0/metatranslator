@@ -99,6 +99,38 @@ def _match(gloss: list[str]) -> str | None:
     return PHRASES.get(tuple(gloss))
 
 
+def _core(gloss: list[str]) -> list[str]:
+    """The gloss without a leading HELLO run and a trailing THANKYOU/BYE/PLEASE (same split as to_english)."""
+    g = list(gloss)
+    while g and g[0] == "HELLO":
+        g.pop(0)
+    while len(g) > 1 and g[-1] in ("THANKYOU", "BYE", "PLEASE"):
+        g.pop()
+    return g
+
+
+def combo_ok(gloss: list[str]) -> bool:
+    """Is this sign sequence a sensible thing to say? A single sign always is; longer sequences must match a phrase
+    template or a WH pattern once an opening HELLO and closing THANKYOU/BYE/PLEASE are set aside.
+    'HAPPY WATER' or 'BYE HELLO' are rejected rather than joined into nonsense. Unknown glosses never combine."""
+    gloss = [g for g in gloss if g and g != "REST"]
+    core = _core(gloss)
+    return len(core) <= 1 or _match(core) is not None or _wh(core, ENGLISH) is not None
+
+
+def best_valid_run(gloss: list[str], conf: list[float]) -> tuple[int, int]:
+    """Indices [i, j) of the contiguous run of signs to keep: the whole thing when combo_ok, else the longest sensible
+    sub-run (ties: highest total confidence). Always at least one sign."""
+    if combo_ok(gloss):
+        return 0, len(gloss)
+    best, key = (0, 1), (0, -1.0)
+    for i in range(len(gloss)):
+        for j in range(i + 1, len(gloss) + 1):
+            if combo_ok(gloss[i:j]) and (j - i, sum(conf[i:j])) > key:
+                best, key = (i, j), (j - i, sum(conf[i:j]))
+    return best
+
+
 def to_english(gloss: list[str], english: dict[str, str] | None = None) -> tuple[str, bool]:
     """Gloss sequence -> (English sentence, question flag). Empty input -> ('', False)."""
     english = english or ENGLISH

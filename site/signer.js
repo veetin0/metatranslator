@@ -256,6 +256,23 @@ export function toEnglish(gloss) {
   }
   return [core, q || core.endsWith("?")];
 }
+// combination check (mirrors language/template.py combo_ok): a single sign is always fine; longer runs must match a
+// phrase template or WH pattern once an opening HELLO and closing THANKYOU/BYE/PLEASE are set aside
+export function comboOk(gloss) {
+  const g = gloss.filter(x => x && x !== "REST");
+  while (g.length && g[0] === "HELLO") g.shift();
+  while (g.length > 1 && ["THANKYOU", "BYE", "PLEASE"].includes(g[g.length - 1])) g.pop();
+  return g.length <= 1 || match(g) !== null || wh(g) !== null;
+}
+export function bestValidRun(gloss, conf) {
+  if (comboOk(gloss)) return [0, gloss.length];
+  let best = [0, 1], key = [0, -1];
+  for (let i = 0; i < gloss.length; i++) for (let j = i + 1; j <= gloss.length; j++) {
+    const sum = conf.slice(i, j).reduce((a, b) => a + b, 0);
+    if (comboOk(gloss.slice(i, j)) && (j - i > key[0] || (j - i === key[0] && sum > key[1]))) { best = [i, j]; key = [j - i, sum]; }
+  }
+  return best;
+}
 const applyQuestion = (t, q) => (!t || !q || t.endsWith("?") ? t : (".!".includes(t[t.length - 1]) ? t.slice(0, -1) : t) + "?");
 
 // ---------------------------------------------------------------- recognizer + phrase builder (relay/pipeline.py)
@@ -285,19 +302,24 @@ export class PhraseBuilder {
     return preds.length ? this.caption(preds, `c${++this.n}`) : null;
   }
   caption(preds, id) {
-    const kept = preds.filter(p => p.tier !== "none");
+    let kept = preds.filter(p => p.tier !== "none");
     if (!kept.length) return {type: "caption", id, text: NONE_TEXT, gloss: [], tier: "none", alternatives: [], question: false,
       confidence: Math.max(...preds.map(p => p.confidence)), speak: false};
-    const gloss = kept.map(p => p.gloss), confs = kept.map(p => p.confidence), conf = Math.min(...confs), tier = tierFor(conf);
+    const [i, j] = bestValidRun(kept.map(p => p.gloss), kept.map(p => p.confidence));
+    const dropped = [...kept.slice(0, i), ...kept.slice(j)].map(p => p.gloss);
+    kept = kept.slice(i, j);
+    const gloss = kept.map(p => p.gloss), confs = kept.map(p => p.confidence), conf = Math.min(...confs);
+    let tier = tierFor(conf);
+    if (dropped.length && tier === "confirmed") tier = "unsure";  // something was left out: don't claim certainty or speak it
     const [t0, q0] = toEnglish(gloss), text = applyQuestion(t0, q0), question = q0 || text.endsWith("?");
     const weakest = confs.indexOf(conf), others = Math.min(1, ...confs.filter((_, i) => i !== weakest));
     const alternatives = [];
     for (const [g, c] of kept[weakest].alternatives) {
       const alt = [...gloss.slice(0, weakest), g, ...gloss.slice(weakest + 1)], [at] = toEnglish(alt);
-      if (at && at !== text) alternatives.push({text: at, gloss: alt, confidence: Math.min(c, others)});
+      if (at && at !== text && c >= CONF_LOW && comboOk(alt)) alternatives.push({text: at, gloss: alt, confidence: Math.min(c, others)});
     }
     return {type: "caption", id, text, gloss, tier, confidence: conf, alternatives: alternatives.slice(0, 2), question,
-      speak: tier === "confirmed"};
+      speak: tier === "confirmed", dropped};
   }
 }
 

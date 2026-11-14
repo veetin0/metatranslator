@@ -1,7 +1,7 @@
 // Signer static demo: webcam -> MediaPipe Holistic (WASM, in the browser) -> signer.js (segmenter, BiGRU, phrases).
 // No server: nothing leaves the device.
 import {FilesetResolver, HolisticLandmarker} from "./vendor/vision_bundle.mjs";
-import {Engine, GRU, N} from "./signer.js";
+import {CONF_LOW, Engine, GRU, N} from "./signer.js";
 
 const $ = id => document.getElementById(id);
 const POSE = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [9, 10]];
@@ -16,7 +16,9 @@ function status(text, kind) {
   $("status").className = "pill " + kind; $("status-text").textContent = text;
   $("lens-state").className = "lens-state" + (kind === "on" ? " on" : ""); $("lens-state-text").textContent = kind === "on" ? "Signer ON" : "Signer OFF";
 }
-$("showlens").onchange = () => $("lens-wrap").hidden = !$("showlens").checked;
+// ring light: a bright frame around the screen so the display lights your hands and face in dark rooms
+$("ring").onchange = () => $("ringlight").hidden = !$("ring").checked;
+$("showlens").onchange =() => $("lens-wrap").hidden = !$("showlens").checked;
 
 // the glasses lens preview: same wrap as hud-web (24 chars, newest 2 lines), unsure shows "? " and alternatives
 function lens(text, tier, alts = []) {
@@ -137,17 +139,18 @@ const TIER = {confirmed: "✓ Sure", unsure: "? Not sure", none: "Didn't catch t
 function onEvent(e) {
   if (e.type === "partial") {
     const g = $("gloss");
-    g.textContent = e.gloss; g.classList.remove("pop", "placeholder"); void g.offsetWidth; g.classList.add("pop");
+    const seen = e.top.filter(([, c]) => c >= CONF_LOW);  // confidence gate: nothing under 50% is shown
+    g.textContent = e.tier === "none" ? "…" : e.gloss; g.classList.remove("pop", "placeholder"); void g.offsetWidth; g.classList.add("pop");
     $("tier").className = "tier " + e.tier;
-    $("tier").textContent = `${TIER[e.tier]} · ${pct(e.confidence)}`;
-    $("bars").replaceChildren(...e.top.map(([gl, c]) => {
+    $("tier").textContent = e.tier === "none" ? TIER.none : `${TIER[e.tier]} · ${pct(e.confidence)}`;
+    $("bars").replaceChildren(...seen.map(([gl, c]) => {
       const li = document.createElement("li");
       li.innerHTML = `<span></span><span class="track"><span class="fill"></span></span><span class="pct">${pct(c)}</span>`;
       li.firstChild.textContent = gl;
       requestAnimationFrame(() => li.querySelector(".fill").style.width = pct(c));
       return li;
     }));
-    const chip = $("chip-" + e.gloss);
+    const chip = e.tier === "none" ? null : $("chip-" + e.gloss);
     if (chip) { chip.classList.add("hit"); setTimeout(() => chip.classList.remove("hit"), 1500); }
   }
   if (e.type === "caption") {

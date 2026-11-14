@@ -1,7 +1,9 @@
 """Template mode and the face question flag (vision/face.py)."""
 from types import SimpleNamespace
 
-from signer_core.language import apply_question, to_english
+import pytest
+
+from signer_core.language import apply_question, best_valid_run, combo_ok, to_english
 from signer_core.vision.face import QuestionDetector, blendshapes_from_result, brow_scores, question_enabled
 
 
@@ -75,3 +77,19 @@ def test_question_flag_behind_signer_flags():
     assert question_enabled({"SIGNER_FLAGS": "teach,question"})
     assert not question_enabled({"SIGNER_FLAGS": ""})
     assert not question_enabled({})
+
+
+@pytest.mark.parametrize("gloss,ok", [
+    (["WATER"], True), (["HAPPY"], True), (["WATER", "PLEASE"], True), (["HELLO", "WATER", "PLEASE"], True),
+    (["WHERE", "BOOK"], True), (["HELLO", "HELP"], True), (["THANKYOU", "BYE"], True),
+    (["HAPPY", "WATER"], False), (["BYE", "HELLO"], False), (["SICK", "BOOK"], False), (["TALK", "LISTEN", "PLEASE"], False),
+])
+def test_combo_ok(gloss, ok):
+    assert combo_ok(gloss) is ok
+
+
+def test_best_valid_run_drops_nonsense_and_keeps_the_stronger_sign():
+    assert best_valid_run(["HAPPY", "WATER"], [0.90, 0.60]) == (0, 1)
+    assert best_valid_run(["HAPPY", "WATER"], [0.60, 0.90]) == (1, 2)
+    assert best_valid_run(["WATER", "PLEASE"], [0.6, 0.6]) == (0, 2)
+    assert best_valid_run(["HAPPY", "WATER", "PLEASE"], [0.9, 0.7, 0.7]) == (1, 3)

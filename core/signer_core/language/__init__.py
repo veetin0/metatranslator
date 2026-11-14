@@ -6,10 +6,10 @@ SIGNER_FLAGS=llm) sends only gloss text to Claude Haiku 4.5, validates the reply
     fluent(["WHERE", "BOOK"])       # Fluent(text=..., question=True, mode="template"|"llm", reason=...)
 """
 from .llm import Fluent, FluentTranslator, apply_question, build_prompt, fluent, llm_enabled
-from .template import ENGLISH, PHRASES, QUESTION_GLOSSES, read_english, to_english
+from .template import ENGLISH, PHRASES, QUESTION_GLOSSES, best_valid_run, combo_ok, read_english, to_english
 from .validator import FUNCTION_WORDS, licensed_words, unlicensed, validate
 
 __all__ = [
     "ENGLISH", "FUNCTION_WORDS", "Fluent", "FluentTranslator", "PHRASES", "QUESTION_GLOSSES", "apply_question",
-    "build_prompt", "fluent", "licensed_words", "llm_enabled", "read_english", "to_english", "unlicensed", "validate",
+    "best_valid_run", "build_prompt", "combo_ok", "fluent", "licensed_words", "llm_enabled", "read_english", "to_english", "unlicensed", "validate",
 ]

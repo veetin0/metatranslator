@@ -12,8 +12,8 @@ import logging
 import os
 import threading
 
-from ..contracts import NONE_TEXT, REST, tier_for
-from ..language import ENGLISH, FluentTranslator, to_english
+from ..contracts import CONF_LOW, NONE_TEXT, REST, tier_for
+from ..language import ENGLISH, FluentTranslator, best_valid_run, combo_ok, to_english
 from ..model import Prediction, Recognizer
 from .session import now_ms
 
@@ -94,10 +94,16 @@ class PhraseBuilder:
             return {"type": "caption", "id": cid, "text": NONE_TEXT, "gloss": [], "tier": "none",
                     "confidence": round(conf, 3), "alternatives": [], "question": False, "mode": "template",
                     "speak": False, "ts": now_ms()}
+        # combination check: never join signs into a nonsense phrase ("HAPPY WATER"); keep the best sensible run
+        i, j = best_valid_run([p.gloss for p in kept], [p.confidence for p in kept])
+        dropped = [p.gloss for p in kept[:i] + kept[j:]]
+        kept = kept[i:j]
         gloss = [p.gloss for p in kept]
         confs = [p.confidence for p in kept]
         conf = min(confs)
         tier = tier_for(conf)
+        if dropped and tier == "confirmed":
+            tier = "unsure"  # something was left out, so don't claim certainty or speak it
         self.translator.english = self.english  # Teach may have swapped in a map with taught signs
         unsure = [p.gloss for p in kept if p.tier == "unsure"]
         out = self.translator(gloss, unsure=unsure)
@@ -108,11 +114,11 @@ class PhraseBuilder:
         for g, c in kept[weakest].alternatives:
             alt = gloss[:weakest] + [g] + gloss[weakest + 1:]
             alt_text, _ = to_english(alt, self.english)
-            if alt_text and alt_text != text:
+            if alt_text and alt_text != text and c >= CONF_LOW and combo_ok(alt):
                 alternatives.append({"text": alt_text, "gloss": alt, "confidence": round(min(c, others), 3)})
         return {"type": "caption", "id": cid, "text": text, "gloss": gloss, "tier": tier,
                 "confidence": round(conf, 3), "alternatives": alternatives[:2], "question": bool(question),
-                "mode": out.mode, "speak": tier == "confirmed", "ts": now_ms()}
+                "mode": out.mode, "speak": tier == "confirmed", "dropped": dropped, "ts": now_ms()}
 
 
 class Pipeline:

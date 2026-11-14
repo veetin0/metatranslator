@@ -1,7 +1,7 @@
 // node site/test.mjs : the JS port must reproduce the Python probabilities and segments (site/model/testvec.json,
 // written by core/tools/export_web.py).
 import {readFileSync} from "node:fs";
-import {GRU, Segmenter, clipFeatures, trimActive, toEnglish} from "./signer.js";
+import {GRU, Segmenter, clipFeatures, trimActive, toEnglish, comboOk, bestValidRun} from "./signer.js";
 
 const dir = new URL("./model/", import.meta.url);
 const man = JSON.parse(readFileSync(new URL("gru.json", dir)));
@@ -33,5 +33,9 @@ for (const [g, want] of [[["HELLO", "QUESTION"], "Hello, can I ask a question?"]
   [["HELLO", "WATER", "PLEASE"], "Hello, water, please."], [["HELP"], "I need help."]]) {
   const [t] = toEnglish(g); if (t !== want) { fail++; console.log("FAIL toEnglish", g, JSON.stringify(t), "want", JSON.stringify(want)); }
 }
+for (const [g, ok] of [[["WATER"], true], [["HELLO", "WATER", "PLEASE"], true], [["WHERE", "BOOK"], true], [["HAPPY", "WATER"], false],
+  [["BYE", "HELLO"], false], [["TALK", "LISTEN", "PLEASE"], false]]) if (comboOk(g) !== ok) { fail++; console.log("FAIL comboOk", g, ok); }
+for (const [g, c, want] of [[["HAPPY", "WATER"], [0.9, 0.6], [0, 1]], [["HAPPY", "WATER"], [0.6, 0.9], [1, 2]], [["HAPPY", "WATER", "PLEASE"], [0.9, 0.7, 0.7], [1, 3]]])
+  if (bestValidRun(g, c).join() !== want.join()) { fail++; console.log("FAIL bestValidRun", g, c, want); }
 console.log(fail ? `${fail} failures` : "ok", "- worst probability diff", worst.toExponential(2));
 process.exit(fail ? 1 : 0);

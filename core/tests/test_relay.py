@@ -101,10 +101,10 @@ def test_frames_become_partial_and_caption_events(classifier):
         assert json.loads(ev.receive_text()) == {"type": "stats", "confirmed": 0, "total": 0}
         ev.send_text(json.dumps({"type": "hello", "client": "hud"}))
         with client.websocket_connect("/ws/frames") as ws:
-            for i, f in enumerate(signing_stream([2, 3])):  # WATER, BOOK
+            for i, f in enumerate(signing_stream([4, 3])):  # WHERE, BOOK
                 ws.send_bytes(frame_msg(f, i, i * 33))
             cap = recv_until(ev, "caption")
-        assert cap["gloss"] == ["WATER", "BOOK"] and cap["id"] == "c1" and cap["mode"] == "template"
+        assert cap["gloss"] == ["WHERE", "BOOK"] and cap["id"] == "c1" and cap["mode"] == "template"
         assert cap["text"] and cap["tier"] == tier_for(cap["confidence"])
         assert cap["speak"] == (cap["tier"] == "confirmed")
         for alt in cap["alternatives"]:
@@ -170,7 +170,13 @@ def test_phrase_tiers_alternatives_and_none():
     pb = PhraseBuilder()
     c = pb.caption([pred("WHERE", 0.95), pred("BOOK", 0.64, [("WATER", 0.41), ("HOME", 0.2)])], "c2")
     assert c["text"] == "Where is the book?" and c["tier"] == "unsure" and c["question"] and not c["speak"]
-    assert c["alternatives"][0] == {"text": "Where is the water?", "gloss": ["WHERE", "WATER"], "confidence": 0.41}
+    assert c["alternatives"] == []  # confidence gate: a 41% runner-up is not offered
+    c = pb.caption([pred("WHERE", 0.95), pred("BOOK", 0.64, [("WATER", 0.50), ("HOME", 0.2)])], "c2b")
+    assert c["alternatives"] == [{"text": "Where is the water?", "gloss": ["WHERE", "WATER"], "confidence": 0.5}]
+    c = pb.caption([pred("HAPPY", 0.90), pred("WATER", 0.60)], "c2c")  # nonsense pair: keep the stronger sign only
+    assert c["gloss"] == ["HAPPY"] and c["dropped"] == ["WATER"] and c["tier"] == "unsure" and not c["speak"]
+    c = pb.caption([pred("WATER", 0.90), pred("PLEASE", 0.85)], "c2d")  # sensible pair stays whole
+    assert c["gloss"] == ["WATER", "PLEASE"] and c["dropped"] == [] and c["speak"]
     c = pb.caption([pred("HELLO", 0.9), pred("QUESTION", 0.86)], "c1")
     assert c["text"] == "Hello, can I ask a question?" and c["tier"] == "confirmed" and c["speak"]
     c = pb.caption([pred("BOOK", 0.31)], "c3")
