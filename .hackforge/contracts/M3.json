@@ -32,7 +32,7 @@
   ],
   "risk": ["security-sensitive"],
   "max_iterations": 3,
-  "status": "todo",
+  "status": "done",
   "tasks": [
     {"id": "M3.1", "role": "full-stack", "title": "Glasses app: reply STT on the phone mic (MWDATSpeech only if stable) -> POST /reply, typed-reply fallback, triggerable D3 states (permission denied, glasses off, core down), readout footer on the DAT card", "owned": ["glasses-app/**"], "owner": "agent", "machine": "lead's Mac (Xcode, iPhone, glasses slot)", "dod_ids": ["D5"]},
     {"id": "M3.2", "role": "backend", "title": "LLM fluent mode (Claude Haiku 4.5, gloss text only) + gloss-only validator + offline template fallback + question flag from face blendshapes (live only)", "owned": ["core/signer_core/language/**", "core/signer_core/vision/face.py", "core/tests/test_validator.py", "core/tests/test_language.py"], "owner": "agent", "dod_ids": ["D2"]},

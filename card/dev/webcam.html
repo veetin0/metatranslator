@@ -1,0 +1,69 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signer: webcam test</title>
+<style>
+  body{margin:0;background:#000;color:#fff;font:16px/1.5 system-ui,sans-serif;display:grid;gap:12px;padding:16px;max-width:760px;margin-inline:auto}
+  video{width:100%;border-radius:12px;background:#111;transform:scaleX(-1)}
+  button{font:inherit;padding:12px 20px;border-radius:10px;border:0;background:#2dd4bf;color:#000;cursor:pointer}
+  button:disabled{opacity:.4}
+  #cap{font-size:32px;min-height:48px}
+  #conf{color:#9ca3af}
+  #log{color:#9ca3af;font-size:14px;max-height:160px;overflow:auto}
+  label{display:flex;gap:8px;align-items:center}
+</style>
+<h1>Signer: webcam test</h1>
+<video id="v" autoplay muted playsinline></video>
+<label><input type="checkbox" id="consent"> I consent: frames are sent to my own Mac, processed live and not stored.</label>
+<div><button id="go" disabled>Start</button> <button id="stop" disabled>Stop</button></div>
+<div id="cap">&nbsp;</div>
+<div id="conf"></div>
+<div id="log"></div>
+<script>
+const $ = id => document.getElementById(id);
+const log = t => { $("log").prepend(Object.assign(document.createElement("div"), {textContent: t})); };
+let ws, ev, timer, seq = 0, stream;
+const c = document.createElement("canvas");
+$("consent").onchange = () => $("go").disabled = !$("consent").checked;
+$("go").onclick = async () => {
+  stream = await navigator.mediaDevices.getUserMedia({video: {width: 640, height: 480}});
+  $("v").srcObject = stream;
+  await fetch("/session/start", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({by: "card"})});
+  const base = location.origin.replace("http", "ws");
+  ev = new WebSocket(base + "/ws/events");
+  ev.onmessage = m => {
+    const e = JSON.parse(m.data);
+    if (e.type === "partial") { log(`sign: ${e.gloss} (${e.confidence})`); }
+    if (e.type === "caption") { $("cap").textContent = e.text; $("conf").textContent = `${e.tier} · ${e.confidence} · ${e.gloss.join(" ")}`; }
+    if (e.type === "error") log("error: " + JSON.stringify(e));
+  };
+  ws = new WebSocket(base + "/ws/frames");
+  ws.binaryType = "arraybuffer";
+  ws.onopen = () => {
+    $("go").disabled = true; $("stop").disabled = false;
+    timer = setInterval(sendFrame, 100);
+  };
+  ws.onclose = () => log("frames socket closed");
+};
+function sendFrame() {
+  const v = $("v");
+  if (!v.videoWidth || ws.readyState !== 1 || ws.bufferedAmount > 500000) return;
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext("2d").drawImage(v, 0, 0);
+  c.toBlob(async b => {
+    const jpeg = new Uint8Array(await b.arrayBuffer());
+    const head = new TextEncoder().encode(JSON.stringify({seq: seq++, ts_ms: Date.now(), w: c.width, h: c.height, source: "webcam", rot: 0}));
+    const out = new Uint8Array(4 + head.length + jpeg.length);
+    new DataView(out.buffer).setUint32(0, head.length);
+    out.set(head, 4); out.set(jpeg, 4 + head.length);
+    if (ws.readyState === 1) ws.send(out);
+  }, "image/jpeg", 0.7);
+}
+$("stop").onclick = async () => {
+  clearInterval(timer);
+  await fetch("/session/stop", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({by: "card"})});
+  ws && ws.close(); ev && ev.close();
+  stream && stream.getTracks().forEach(t => t.stop());
+  $("go").disabled = !$("consent").checked; $("stop").disabled = true;
+};
+</script>
