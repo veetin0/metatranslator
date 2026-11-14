@@ -1,0 +1,42 @@
+{
+  "name": "m6_large",
+  "n_classes": 600,
+  "n_citizen_train": 14671,
+  "n_citizen_test": 3705,
+  "protocol": "20% of each ASL Citizen gloss held out (random, optimistic: no signer ids); PopSign signer-disjoint fold; WLASL never trained on",
+  "asl_citizen_heldout_top1": 0.8211,
+  "asl_citizen_heldout_top3": 0.935,
+  "asl_citizen_heldout_core_top1": 0.9362,
+  "asl_citizen_heldout_core_top3": 0.9716,
+  "popsign_heldout_core_top1": 0.9037,
+  "popsign_heldout_core_top3": 0.9802,
+  "wlasl_core_top1": 0.7094,
+  "wlasl_core_top3": 0.8079,
+  "detail": {
+    "asl_citizen_heldout": {
+      "top1": 0.8210526315789474,
+      "top3": 0.9349527665317139,
+      "cov@0.8": 0.41808367071524966,
+      "acc@0.8": 0.9715945771465462
+    },
+    "asl_citizen_heldout_core": {
+      "top1": 0.9361702127659575,
+      "top3": 0.9716312056737588,
+      "cov@0.8": 0.5673758865248227,
+      "acc@0.8": 1.0
+    },
+    "popsign_heldout_core": {
+      "top1": 0.9037339556592765,
+      "top3": 0.9801633605600933,
+      "cov@0.8": 0.631855309218203,
+      "acc@0.8": 0.9935364727608494
+    },
+    "wlasl_core": {
+      "top1": 0.7093596059113301,
+      "top3": 0.8078817733990148,
+      "cov@0.8": 0.2561576354679803,
+      "acc@0.8": 1.0
+    }
+  },
+  "created": "2026-11-14T13:56:25+00:00"
+}

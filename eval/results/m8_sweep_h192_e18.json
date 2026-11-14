@@ -1,0 +1,91 @@
+{
+  "top1": 0.9510944340212633,
+  "top3": 0.9854909318323952,
+  "cov@0.8": 0.9093183239524703,
+  "acc@0.8": 0.984181568088033,
+  "confused_pairs": [
+    {
+      "true": "WHY",
+      "pred": "SICK",
+      "n": 41,
+      "rate": 0.102
+    },
+    {
+      "true": "SICK",
+      "pred": "WHY",
+      "n": 24,
+      "rate": 0.06
+    },
+    {
+      "true": "LISTEN",
+      "pred": "HELLO",
+      "n": 19,
+      "rate": 0.048
+    },
+    {
+      "true": "WHY",
+      "pred": "WAIT",
+      "n": 15,
+      "rate": 0.037
+    },
+    {
+      "true": "BOOK",
+      "pred": "WAIT",
+      "n": 13,
+      "rate": 0.033
+    },
+    {
+      "true": "LISTEN",
+      "pred": "BYE",
+      "n": 11,
+      "rate": 0.028
+    },
+    {
+      "true": "HELLO",
+      "pred": "BYE",
+      "n": 9,
+      "rate": 0.022
+    },
+    {
+      "true": "THANKYOU",
+      "pred": "WAIT",
+      "n": 9,
+      "rate": 0.022
+    },
+    {
+      "true": "BOOK",
+      "pred": "TALK",
+      "n": 9,
+      "rate": 0.022
+    },
+    {
+      "true": "FINISH",
+      "pred": "BYE",
+      "n": 8,
+      "rate": 0.02
+    },
+    {
+      "true": "PLEASE",
+      "pred": "HAPPY",
+      "n": 7,
+      "rate": 0.018
+    },
+    {
+      "true": "TALK",
+      "pred": "BOOK",
+      "n": 7,
+      "rate": 0.018
+    }
+  ],
+  "name": "m8_sweep_h192_e18",
+  "protocol": "loso-5fold-signer-disjoint",
+  "train_extra": "asl_citizen+wlasl",
+  "model": "signer_core.model.gru.GRUClassifier",
+  "n_clips": 7995,
+  "n_folds": 5,
+  "top1_per_fold": null,
+  "conf_high": 0.8,
+  "aug": 4,
+  "epochs": 18,
+  "created": "2026-11-14T13:43:42+00:00"
+}

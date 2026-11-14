@@ -1,0 +1,26 @@
+{
+  "glasses_reps_heldout": {
+    "top1": 0.9285714285714286,
+    "top3": 0.9642857142857143,
+    "cov@0.8": 0.75,
+    "acc@0.8": 1.0,
+    "n": 28,
+    "glosses": 6,
+    "confused_pairs": [
+      {
+        "true": "HELLO",
+        "pred": "PLEASE",
+        "n": 1,
+        "rate": 0.333
+      },
+      {
+        "true": "THANKYOU",
+        "pred": "PLEASE",
+        "n": 1,
+        "rate": 0.2
+      }
+    ],
+    "note": "taught glasses-camera reps held out (every n-th rep per gloss); same people as training, so optimistic"
+  },
+  "created": "2026-11-14T13:38:15+00:00"
+}
