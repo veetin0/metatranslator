@@ -2,12 +2,14 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
 <title>Signer · try it live</title>
 <link rel="stylesheet" href="demo.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e40af'/%3E%3Cpath d='M9 22c4 3 10 3 14-1M11 12v5M16 9v8M21 11v6' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2330333a'/%3E%3Cpath d='M9 22c4 3 10 3 14-1M11 12v5M16 9v8M21 11v6' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
 <body>
 <header class="top">
-  <div class="brand"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1e40af"/><path d="M9 22c4 3 10 3 14-1M11 12v5M16 9v8M21 11v6" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg><div><h1>Signer</h1><p>ASL → English, runs entirely in your browser</p></div></div>
+  <div class="brand"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#30333a"/><path d="M9 22c4 3 10 3 14-1M11 12v5M16 9v8M21 11v6" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg><div><h1>Signer</h1><p>ASL → English, runs entirely in your browser</p></div></div>
   <div id="status" class="pill off" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="status-text">Camera off</span></div>
 </header>
 
@@ -28,11 +30,19 @@
       <button id="stop" class="btn danger" disabled>■ Stop</button>
       <label class="toggle"><input type="checkbox" id="speak" checked> Speak captions</label>
       <label class="toggle"><input type="checkbox" id="showsk" checked> Show skeleton</label>
+      <label class="toggle"><input type="checkbox" id="showlens" checked> Glasses view</label>
       <span id="fps" class="muted"></span>
     </div>
   </section>
 
   <aside class="panel">
+    <section class="card lens-wrap" id="lens-wrap">
+      <h2>What the wearer sees</h2>
+      <div class="lens" id="lens" role="img" aria-label="Glasses display preview">
+        <div class="lens-state" id="lens-state"><span class="dot" aria-hidden="true"></span><span id="lens-state-text">Signer OFF</span></div>
+        <div class="lens-cap" id="lens-cap" aria-hidden="true"></div>
+      </div>
+    </section>
     <section class="card now" aria-live="polite">
       <h2>Last sign</h2>
       <div class="gloss placeholder" id="gloss">Waiting for a sign</div>

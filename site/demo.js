@@ -12,7 +12,23 @@ let stream, landmarker, gru, engine, frame = null, frameAt = 0, running = false,
 let frames = 0, fpsAt = performance.now();
 const sk = $("sk"), ctx = sk.getContext("2d");
 
-function status(text, kind) { $("status").className = "pill " + kind; $("status-text").textContent = text; }
+function status(text, kind) {
+  $("status").className = "pill " + kind; $("status-text").textContent = text;
+  $("lens-state").className = "lens-state" + (kind === "on" ? " on" : ""); $("lens-state-text").textContent = kind === "on" ? "Signer ON" : "Signer OFF";
+}
+$("showlens").onchange = () => $("lens-wrap").hidden = !$("showlens").checked;
+
+// the glasses lens preview: same wrap as hud-web (24 chars, newest 2 lines), unsure shows "? " and alternatives
+function lens(text, tier, alts = []) {
+  const out = []; let cur = "";
+  for (const w of (tier === "unsure" ? "? " + text : text).split(/\s+/).filter(Boolean)) {
+    if (!cur) cur = w; else if (cur.length + 1 + w.length <= 24) cur += " " + w; else { out.push(cur); cur = w; }
+  }
+  if (cur) out.push(cur);
+  const el = $("lens-cap"); el.className = "lens-cap " + tier;
+  el.replaceChildren(...out.slice(-2).map(l => Object.assign(document.createElement("p"), {textContent: l})),
+    ...(tier === "unsure" ? alts.slice(0, 2) : []).map(a => Object.assign(document.createElement("p"), {className: "alt", textContent: "or " + a.text})));
+}
 
 // model + MediaPipe load once, on the first "Turn on camera"
 let ready;
@@ -138,6 +154,7 @@ function onEvent(e) {
     const c = $("caption");
     c.classList.remove("placeholder");
     c.textContent = e.text + (e.tier === "unsure" && e.alternatives.length ? `  (or: ${e.alternatives.map(a => a.text).join(" / ")})` : "");
+    if (e.tier !== "none") lens(e.text, e.tier, e.alternatives || []);
     if (e.tier !== "none") {
       const li = document.createElement("li");
       li.innerHTML = "<span></span><small></small>";
@@ -155,7 +172,7 @@ function stop(label = "Camera off") {
   engine = null; frame = null;
   stream && stream.getTracks().forEach(t => t.stop()); stream = null;
   ctx.clearRect(0, 0, sk.width, sk.height);
-  $("signing").hidden = true; $("empty").hidden = false; $("stop").disabled = true;
+  $("lens-cap").replaceChildren(); $("signing").hidden = true; $("empty").hidden = false; $("stop").disabled = true;
   $("go").disabled = !$("consent").checked; $("fps").textContent = "";
   status(label, label === "Camera off" ? "off" : "err");
 }

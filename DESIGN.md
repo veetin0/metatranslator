@@ -65,3 +65,10 @@ Lens: caption fade-in 150 ms, no movement, no flashing; updates throttled ≥ 50
 - Colour-only states, placeholder-only labels, icons without labels.
 - Partner logos or "Meta-endorsed" style claims.
 - Gradients, glassmorphism, decorative illustration.
+
+## Meta UI Toolkit (2026-11-14, supersedes the colour/radius choices above)
+
+All three surfaces now follow Meta's UI Toolkit for Meta Ray-Ban Display (github.com/meta/meta-ray-ban-display-ui-toolkit-web):
+- **Lens (`hud-web/`)**: real React toolkit (`@wearables-ui-toolkit/mrbd`): `App`, `Page`, `Button`, `Tag`; colours from `--uit-*` tokens; D-pad focus handled by the toolkit. Pure logic stays in `src/lens.js` (tested).
+- **Static demo (`site/`) and Signer Card (`card/`)**: flat web pages, so the tokens are copied into plain CSS: window `#000`, surface `#27282d`, button `#30333a`, border `#ffffff40`, text `#fff` / `#cfd3d9`, accents green `#1ea920`, red `#ff5668`, yellow `#c58600`; radii 16/24/32 px, pill buttons, Noto Sans. Text tints are lightened where the toolkit accent is under 4.5:1 (green text `#5fd16a`, warn `#f5b942`, error `#ff8a98`).
+- `site/` also shows a "Glasses view": a square lens preview of what the wearer sees.
