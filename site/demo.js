@@ -7,7 +7,7 @@ const $ = id => document.getElementById(id);
 const POSE = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [9, 10]];
 const HAND = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12],
   [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
-const MIN_FRAME_MS = 45;  // ~20 fps is plenty for signing and keeps laptops cool
+const MIN_FRAME_MS = 30;  // cap at ~30 fps (the camera rate); tracking runs as fast as the machine allows below that
 let stream, landmarker, gru, engine, frame = null, frameAt = 0, running = false, lastRun = 0, lastVideoTime = -1;
 let frames = 0, fpsAt = performance.now();
 const sk = $("sk"), ctx = sk.getContext("2d");
@@ -54,7 +54,7 @@ $("consent").onchange = () => $("go").disabled = !$("consent").checked;
 $("go").onclick = async () => {
   $("go").disabled = true;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({video: {width: 640, height: 480, facingMode: "user"}});
+    stream = await navigator.mediaDevices.getUserMedia({video: {width: 640, height: 480, frameRate: {ideal: 30},facingMode: "user"}});
   } catch (e) {
     status("Camera blocked", "err"); $("go").disabled = false; return;
   }
@@ -101,7 +101,12 @@ function tick(now) {
 function tickFps() {
   frames++;
   const t = performance.now();
-  if (t - fpsAt > 1000) { $("fps").textContent = `${Math.round(frames * 1000 / (t - fpsAt))} fps tracked`; frames = 0; fpsAt = t; }
+  if (t - fpsAt > 1000) {
+    const fps = Math.round(frames * 1000 / (t - fpsAt));
+    // low tracked fps blurs fast signs and drops hands: usually a dim room (long exposure) or a slow machine
+    $("fps").textContent = `${fps} fps tracked` + (fps < 15 ? " · low: try the ring light or more light" : "");
+    frames = 0; fpsAt = t;
+  }
 }
 
 function draw(now) {
