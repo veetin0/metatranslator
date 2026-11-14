@@ -8,12 +8,16 @@ Each recognised sign also emits a `partial` (card live hint).
 """
 from __future__ import annotations
 
+import logging
+import os
 import threading
 
 from ..contracts import NONE_TEXT, REST, tier_for
 from ..language import ENGLISH, FluentTranslator, to_english
 from ..model import Prediction, Recognizer
 from .session import now_ms
+
+log = logging.getLogger("signer.relay")
 
 
 class JpegLandmarker:
@@ -131,7 +135,30 @@ class Pipeline:
 
     def push_jpeg(self, header: dict, jpeg: bytes) -> list[dict]:
         f75 = self.landmarker(jpeg, header)
+        if os.environ.get("SIGNER_DEBUG_FRAMES"):
+            self._debug(header, jpeg, f75)
         return self.push_landmarks(f75, int(header.get("ts_ms", 0)))
+
+    def _debug(self, header: dict, jpeg: bytes, f75) -> None:
+        """SIGNER_DEBUG_FRAMES=1: log every 30 frames what Holistic found; keep the latest frame in /tmp."""
+        import numpy as np
+
+        f = np.asarray(f75, dtype=np.float32)
+        from ..model.segmenter import is_up
+
+        self._dbg = getattr(self, "_dbg", [0, 0, 0, 0])
+        self._dbg[0] += 1
+        self._dbg[3] += int(is_up(f))
+        self._dbg[1] += int(not np.isnan(f[33:75]).all())
+        self._dbg[2] += int(not np.isnan(f[0:33]).all())
+        if self._dbg[0] % 30 == 0:
+            n, hands, pose, up = self._dbg
+            log.info("debug frames=%d size=%sx%s rot=%s src=%s hands=%.0f%% pose=%.0f%% up=%.0f%%", self.frames + 1,
+                     header.get("w"), header.get("h"), header.get("rot"), header.get("source"),
+                     100 * hands / n, 100 * pose / n, 100 * up / n)
+            self._dbg = [0, 0, 0, 0]
+            with open("/tmp/signer_last_frame.jpg", "wb") as fh:
+                fh.write(jpeg)
 
     def push_landmarks(self, f75, ts_ms: int) -> list[dict]:
         with self._lock:
@@ -147,6 +174,9 @@ class Pipeline:
             return out + ([cap] if cap else [])
 
     def _on_pred(self, pred: Prediction) -> list[dict]:
+        if os.environ.get("SIGNER_DEBUG_FRAMES"):
+            log.info("debug segment -> %s %.2f tier=%s alts=%s", pred.gloss, pred.confidence, pred.tier,
+                     [(g, round(c, 2)) for g, c in pred.alternatives])
         if self.on_segment:
             self.on_segment()
         if pred.gloss == REST:

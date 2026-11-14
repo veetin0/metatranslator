@@ -62,6 +62,11 @@ class Recognizer:
 def build_classifier(data_dir: str | None = None, sources=("own", "popsign"), **knn_kwargs) -> KNNClassifier:
     """Fit the kNN on every clip of `sources` under SIGNER_DATA_DIR (default data/), vocabulary glosses only."""
     data_dir = data_dir or os.environ.get("SIGNER_DATA_DIR", "data")
+    gru = os.path.join(data_dir, "models", "gru.pt")
+    if os.path.exists(gru) and os.environ.get("SIGNER_MODEL", "gru") == "gru":  # trained by core/tools/train_gru.py
+        from .gru import GRUClassifier
+
+        return GRUClassifier(gru)
     vocab_path = os.path.join(data_dir, "VOCAB.md")
     vocab = read_vocab(vocab_path) if os.path.exists(vocab_path) else None
     ds = load_dataset(data_dir, sources, vocab=vocab)

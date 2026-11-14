@@ -33,6 +33,8 @@ final class SessionRepository {
   private(set) var device: DeviceSummary?
   private(set) var lastError: String?
 
+  private static let grantedKey = "signer.cameraGranted"
+
   /// The session reached `.started`: attach the camera now.
   @ObservationIgnored var onSessionStarted: ((DeviceSession) -> Void)?
   /// The session ended (STOPPED), by us or by the device. `byUs` is true after `stopSession()`.
@@ -128,9 +130,17 @@ final class SessionRepository {
     } catch {
       log.add("camera permission check: \(DatErrorTriage.describe(error)) (will request)")
     }
+    // Meta AI answered "allow always" earlier but the query does not report it: do not send the
+    // wearer through Meta AI again on every Start. A real denial clears this (below).
+    if UserDefaults.standard.bool(forKey: Self.grantedKey) {
+      log.add("camera permission: query not granted, using the earlier grant")
+      cameraPermission = .granted
+      return true
+    }
     do {
       let result = try await wearables.requestPermission(.camera)
       cameraPermission = result == .granted ? .granted : .denied
+      UserDefaults.standard.set(result == .granted, forKey: Self.grantedKey)
       log.add("camera permission request: \(result)")
       return result == .granted
     } catch {
@@ -244,6 +254,9 @@ final class SessionRepository {
     lastError = message
     log.add(message)
     onError?(message)
+    if DatErrorTriage.classify(message) == .permissionDenied {
+      UserDefaults.standard.set(false, forKey: Self.grantedKey)  // stale grant: ask again next Start
+    }
     if DatErrorTriage.classify(message) == .capabilityDenied {
       log.add("!! CAPABILITY_DENIED suspected: report to Meta (device, app version, time) immediately")
     }

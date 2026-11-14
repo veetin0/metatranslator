@@ -1,0 +1,415 @@
+{
+  "name": "m3b",
+  "protocol": "loso",
+  "sources": [
+    "popsign"
+  ],
+  "signers": [
+    "4a-6001",
+    "4a-7002",
+    "4a-7003",
+    "4a-7005",
+    "4a-7007",
+    "4a-8005",
+    "4a-8006",
+    "4a-8008",
+    "4a-8012",
+    "4a-8013",
+    "4a-8014",
+    "4a-8015",
+    "4a-8017",
+    "4a-8018",
+    "4a-8019",
+    "4a-8020",
+    "4a-8021",
+    "4a-8022",
+    "4a-8025",
+    "4a-8027",
+    "4a-8028",
+    "4a-8030",
+    "4a-8051",
+    "4a-8053",
+    "4a-8054",
+    "4a-8902",
+    "gtsignstudy4a-7041",
+    "gtsignstudy4a-7042",
+    "gtsignstudy4a-7043",
+    "gtsignstudy4a-8031",
+    "gtsignstudy4a-8032",
+    "gtsignstudy4a-8033",
+    "gtsignstudy4a-8035",
+    "gtsignstudy4a-8036",
+    "gtsignstudy4a-8037",
+    "gtsignstudy4a-8038",
+    "gtsignstudy4a-8039",
+    "gtsignstudy4a-8040",
+    "gtsignstudy4a-8041",
+    "gtsignstudy4a-8043",
+    "gtsignstudy4a-8044",
+    "gtsignstudy4a-8045",
+    "gtsignstudy4a-8046",
+    "gtsignstudy4a-8047",
+    "gtsignstudy4a-8048",
+    "gtsignstudy4a-8049",
+    "gtsignstudy4a-8050"
+  ],
+  "top1": 0.512256,
+  "top3": 0.756128,
+  "selective_acc": 0.951965,
+  "coverage": 0.114557,
+  "abstain_rate": 0.598674,
+  "per_class": {
+    "BOOK": {
+      "n": 400,
+      "top1": 0.2675
+    },
+    "BYE": {
+      "n": 400,
+      "top1": 0.34
+    },
+    "FINISH": {
+      "n": 400,
+      "top1": 0.445
+    },
+    "HAPPY": {
+      "n": 400,
+      "top1": 0.47
+    },
+    "HELLO": {
+      "n": 400,
+      "top1": 0.55
+    },
+    "HOME": {
+      "n": 400,
+      "top1": 0.6825
+    },
+    "LISTEN": {
+      "n": 396,
+      "top1": 0.580808
+    },
+    "NO": {
+      "n": 400,
+      "top1": 0.3775
+    },
+    "PLEASE": {
+      "n": 400,
+      "top1": 0.88
+    },
+    "POTTY": {
+      "n": 400,
+      "top1": 0.4275
+    },
+    "SICK": {
+      "n": 400,
+      "top1": 0.7525
+    },
+    "TALK": {
+      "n": 400,
+      "top1": 0.4
+    },
+    "THANKYOU": {
+      "n": 400,
+      "top1": 0.5425
+    },
+    "TIME": {
+      "n": 400,
+      "top1": 0.64
+    },
+    "WAIT": {
+      "n": 400,
+      "top1": 0.645
+    },
+    "WATER": {
+      "n": 400,
+      "top1": 0.5825
+    },
+    "WHERE": {
+      "n": 400,
+      "top1": 0.465
+    },
+    "WHO": {
+      "n": 400,
+      "top1": 0.515
+    },
+    "WHY": {
+      "n": 400,
+      "top1": 0.4525
+    },
+    "YES": {
+      "n": 400,
+      "top1": 0.23
+    }
+  },
+  "per_source": {
+    "popsign": {
+      "n": 7996,
+      "top1": 0.512256,
+      "top3": 0.756128
+    }
+  },
+  "n_confirmed": 916,
+  "calibration": [
+    {
+      "lo": 0.0,
+      "hi": 0.1,
+      "n": 103,
+      "acc": 0.184466
+    },
+    {
+      "lo": 0.1,
+      "hi": 0.2,
+      "n": 418,
+      "acc": 0.191388
+    },
+    {
+      "lo": 0.2,
+      "hi": 0.3,
+      "n": 1418,
+      "acc": 0.220028
+    },
+    {
+      "lo": 0.3,
+      "hi": 0.4,
+      "n": 1562,
+      "acc": 0.347631
+    },
+    {
+      "lo": 0.4,
+      "hi": 0.5,
+      "n": 1286,
+      "acc": 0.489891
+    },
+    {
+      "lo": 0.5,
+      "hi": 0.6,
+      "n": 1068,
+      "acc": 0.634831
+    },
+    {
+      "lo": 0.6,
+      "hi": 0.7,
+      "n": 720,
+      "acc": 0.765278
+    },
+    {
+      "lo": 0.7,
+      "hi": 0.8,
+      "n": 505,
+      "acc": 0.813861
+    },
+    {
+      "lo": 0.8,
+      "hi": 0.9,
+      "n": 423,
+      "acc": 0.931442
+    },
+    {
+      "lo": 0.9,
+      "hi": 1.0,
+      "n": 493,
+      "acc": 0.969574
+    }
+  ],
+  "ece": 0.047456,
+  "top_confusions": [
+    {
+      "true": "HAPPY",
+      "pred": "PLEASE",
+      "n": 132
+    },
+    {
+      "true": "TALK",
+      "pred": "WATER",
+      "n": 123
+    },
+    {
+      "true": "BYE",
+      "pred": "LISTEN",
+      "n": 79
+    },
+    {
+      "true": "WATER",
+      "pred": "TALK",
+      "n": 73
+    },
+    {
+      "true": "YES",
+      "pred": "POTTY",
+      "n": 70
+    },
+    {
+      "true": "BOOK",
+      "pred": "WAIT",
+      "n": 68
+    },
+    {
+      "true": "WHERE",
+      "pred": "POTTY",
+      "n": 68
+    },
+    {
+      "true": "THANKYOU",
+      "pred": "WAIT",
+      "n": 61
+    },
+    {
+      "true": "WHY",
+      "pred": "LISTEN",
+      "n": 61
+    },
+    {
+      "true": "NO",
+      "pred": "WHERE",
+      "n": 60
+    }
+  ],
+  "latency_ms_p50": 2.325896,
+  "n_clips": 7996,
+  "created": "2026-11-14T10:51:43+00:00",
+  "model": "signer_core.model.KNNClassifier",
+  "conf_high": 0.8,
+  "conf_low": 0.5,
+  "seed": 0,
+  "n_skipped": 0,
+  "signers_by_source": {
+    "popsign": [
+      "4a-6001",
+      "4a-7002",
+      "4a-7003",
+      "4a-7005",
+      "4a-7007",
+      "4a-8005",
+      "4a-8006",
+      "4a-8008",
+      "4a-8012",
+      "4a-8013",
+      "4a-8014",
+      "4a-8015",
+      "4a-8017",
+      "4a-8018",
+      "4a-8019",
+      "4a-8020",
+      "4a-8021",
+      "4a-8022",
+      "4a-8025",
+      "4a-8027",
+      "4a-8028",
+      "4a-8030",
+      "4a-8051",
+      "4a-8053",
+      "4a-8054",
+      "4a-8902",
+      "gtsignstudy4a-7041",
+      "gtsignstudy4a-7042",
+      "gtsignstudy4a-7043",
+      "gtsignstudy4a-8031",
+      "gtsignstudy4a-8032",
+      "gtsignstudy4a-8033",
+      "gtsignstudy4a-8035",
+      "gtsignstudy4a-8036",
+      "gtsignstudy4a-8037",
+      "gtsignstudy4a-8038",
+      "gtsignstudy4a-8039",
+      "gtsignstudy4a-8040",
+      "gtsignstudy4a-8041",
+      "gtsignstudy4a-8043",
+      "gtsignstudy4a-8044",
+      "gtsignstudy4a-8045",
+      "gtsignstudy4a-8046",
+      "gtsignstudy4a-8047",
+      "gtsignstudy4a-8048",
+      "gtsignstudy4a-8049",
+      "gtsignstudy4a-8050"
+    ]
+  },
+  "folds": [
+    {
+      "name": "popsign:fold0",
+      "held_out": [
+        "popsign:4a-8013",
+        "popsign:4a-8018",
+        "popsign:4a-8027",
+        "popsign:4a-8030",
+        "popsign:gtsignstudy4a-7041",
+        "popsign:gtsignstudy4a-8039",
+        "popsign:gtsignstudy4a-8044",
+        "popsign:gtsignstudy4a-8046",
+        "popsign:gtsignstudy4a-8047",
+        "popsign:gtsignstudy4a-8049"
+      ],
+      "n_train": 6262,
+      "n_test": 1734,
+      "top1": 0.563437
+    },
+    {
+      "name": "popsign:fold1",
+      "held_out": [
+        "popsign:4a-8008",
+        "popsign:4a-8021",
+        "popsign:4a-8022",
+        "popsign:4a-8025",
+        "popsign:4a-8902",
+        "popsign:gtsignstudy4a-7042",
+        "popsign:gtsignstudy4a-7043",
+        "popsign:gtsignstudy4a-8032",
+        "popsign:gtsignstudy4a-8035",
+        "popsign:gtsignstudy4a-8037"
+      ],
+      "n_train": 6310,
+      "n_test": 1686,
+      "top1": 0.532622
+    },
+    {
+      "name": "popsign:fold2",
+      "held_out": [
+        "popsign:4a-8005",
+        "popsign:4a-8012",
+        "popsign:4a-8014",
+        "popsign:4a-8028",
+        "popsign:4a-8054",
+        "popsign:gtsignstudy4a-8033",
+        "popsign:gtsignstudy4a-8038",
+        "popsign:gtsignstudy4a-8043",
+        "popsign:gtsignstudy4a-8050"
+      ],
+      "n_train": 6433,
+      "n_test": 1563,
+      "top1": 0.481126
+    },
+    {
+      "name": "popsign:fold3",
+      "held_out": [
+        "popsign:4a-6001",
+        "popsign:4a-7002",
+        "popsign:4a-7005",
+        "popsign:4a-7007",
+        "popsign:4a-8006",
+        "popsign:4a-8017",
+        "popsign:4a-8053",
+        "popsign:gtsignstudy4a-8045",
+        "popsign:gtsignstudy4a-8048"
+      ],
+      "n_train": 6571,
+      "n_test": 1425,
+      "top1": 0.479298
+    },
+    {
+      "name": "popsign:fold4",
+      "held_out": [
+        "popsign:4a-7003",
+        "popsign:4a-8015",
+        "popsign:4a-8019",
+        "popsign:4a-8020",
+        "popsign:4a-8051",
+        "popsign:gtsignstudy4a-8031",
+        "popsign:gtsignstudy4a-8036",
+        "popsign:gtsignstudy4a-8040",
+        "popsign:gtsignstudy4a-8041"
+      ],
+      "n_train": 6408,
+      "n_test": 1588,
+      "top1": 0.494962
+    }
+  ],
+  "protocol_detail": "Leave-one-signer-out: own/glasses signers are one fold each, PopSign signers are hashed into 5 signer-disjoint folds (seed 0). Each fold trains on all clips of the other signers from all selected sources and tests on the held-out signers; every clip is tested once. Tiers: confirmed >= conf_high, tentative/unsure >= conf_low, else abstain."
+}

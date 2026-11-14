@@ -16,6 +16,12 @@
 <video id="v" autoplay muted playsinline></video>
 <label><input type="checkbox" id="consent"> I consent: frames are sent to my own Mac, processed live and not stored.</label>
 <div><button id="go" disabled>Start</button> <button id="stop" disabled>Stop</button></div>
+<fieldset style="border:1px solid #333;border-radius:10px">
+  <legend>Record your own reps (saved to Downloads as own_SIGN_N.webm)</legend>
+  <input id="sign" list="signs" placeholder="sign, e.g. HELLO" style="font:inherit;padding:8px">
+  <datalist id="signs"><option>BOOK<option>BYE<option>FINISH<option>HAPPY<option>HELLO<option>HOME<option>LISTEN<option>NO<option>PLEASE<option>POTTY<option>SICK<option>TALK<option>THANKYOU<option>TIME<option>WAIT<option>WATER<option>WHERE<option>WHO<option>WHY<option>YES</datalist>
+  <button id="rec">Record 3 s</button> <span id="recmsg"></span>
+</fieldset>
 <div id="cap">&nbsp;</div>
 <div id="conf"></div>
 <div id="log"></div>
@@ -59,6 +65,26 @@ function sendFrame() {
     if (ws.readyState === 1) ws.send(out);
   }, "image/jpeg", 0.7);
 }
+const reps = {};
+$("rec").onclick = async () => {
+  const sign = $("sign").value.trim().toUpperCase();
+  if (!sign) { $("recmsg").textContent = "type a sign first"; return; }
+  let s = stream, own = false;
+  if (!s) { s = await navigator.mediaDevices.getUserMedia({video: {width: 640, height: 480}}); $("v").srcObject = s; own = true; }
+  $("rec").disabled = true;
+  for (let i = 3; i > 0; i--) { $("recmsg").textContent = `get ready ${i}`; await new Promise(r => setTimeout(r, 1000)); }
+  const chunks = [], mr = new MediaRecorder(s);
+  mr.ondataavailable = e => chunks.push(e.data);
+  const done = new Promise(r => mr.onstop = r);
+  mr.start(); $("recmsg").textContent = "SIGN NOW (3 s)";
+  await new Promise(r => setTimeout(r, 3000));
+  mr.stop(); await done;
+  const n = reps[sign] = (reps[sign] || 0) + 1;
+  Object.assign(document.createElement("a"), {href: URL.createObjectURL(new Blob(chunks, {type: "video/webm"})), download: `own_${sign}_${n}.webm`}).click();
+  $("recmsg").textContent = `saved ${sign} #${n}`;
+  if (own) s.getTracks().forEach(t => t.stop());
+  $("rec").disabled = false;
+};
 $("stop").onclick = async () => {
   clearInterval(timer);
   await fetch("/session/stop", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({by: "card"})});

@@ -30,7 +30,7 @@ from .session import SessionManager, now_ms
 log = logging.getLogger("signer.relay")
 
 REPO = Path(__file__).resolve().parents[3]
-MAX_FRAME_AGE_MS = 300
+MAX_FRAME_AGE_MS = int(os.environ.get("SIGNER_MAX_FRAME_AGE_MS", "300"))  # raise over a tunnel or with phone clock skew
 ACK_EVERY = 30
 CLOSE_CONSENT = 4403
 APP_STATES = ("glasses_off", "permission_denied", "on")
@@ -371,6 +371,9 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
             if relay.session.is_on:
                 await relay.emit(relay.pipeline.flush())
 
+    hud = REPO / "hud-web" / "dist"  # the Web App lens, for the Display QR route (?core=wss://<host>/ws/events)
+    if (hud / "index.html").exists():
+        app.mount("/hud", StaticFiles(directory=str(hud), html=True), name="hud")
     card = Path(card_dir or os.environ.get("SIGNER_CARD_DIR", str(REPO / "card")))
     if (card / "index.html").exists():
         app.mount("/", StaticFiles(directory=str(card), html=True), name="card")
