@@ -50,7 +50,7 @@ def convert(path: Path, gloss: str) -> Path:
     xyz[..., 2] /= d.width  # MediaPipe z is in x units
     fps = float(p.body.fps) or 30.0
     t_ms = np.round(np.arange(len(xyz)) * 1000.0 / fps).astype(np.int64)
-    out = OUT / "landmarks" / gloss / (path.stem.split("-", 1)[0] + ".npz")
+    out = OUT / "landmarks" / gloss / (path.stem.replace(" ", "_") + ".npz")  # full stem: ids repeat across batches
     # signer ids are anonymised away; the batch folder is the closest grouping we have
     return save_clip(out, xyz, t_ms, fps, gloss, path.parent.name, "asl_citizen")
 
@@ -62,7 +62,7 @@ def main():
     from huggingface_hub import HfApi, hf_hub_download
 
     vocab = set(read_vocab(str(REPO / "data" / "VOCAB.md"))) - {"REST"}
-    files = [f for f in HfApi().list_repo_files(HF, repo_type="dataset") if f.endswith(".pose")]
+    files = [f for f in HfApi().list_repo_files(HF, repo_type="dataset") if f.endswith(".pose") and "anonymized" not in f]  # anonymized/ repeats 193 clips
     sel = [(f, ALIAS.get(gloss_of(f), gloss_of(f))) for f in files]
     sel = [(f, g) for f, g in sel if g in vocab]
     print(f"{len(files)} pose files, {len(sel)} for our vocabulary", flush=True)

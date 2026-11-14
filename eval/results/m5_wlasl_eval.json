@@ -1,0 +1,25 @@
+{
+  "name": "m5_wlasl_eval",
+  "protocol": "train on PopSign (+ASL Citizen), test on all WLASL clips (never trained on)",
+  "n_clips": 203,
+  "results": {
+    "popsign_only": {
+      "top1": 0.5221674876847291,
+      "top3": 0.6847290640394089,
+      "cov@0.8": 0.4039408866995074,
+      "acc@0.8": 0.8658536585365854
+    },
+    "popsign_plus_citizen": {
+      "top1": 0.8423645320197044,
+      "top3": 0.896551724137931,
+      "cov@0.8": 0.6206896551724138,
+      "acc@0.8": 0.9603174603174603
+    }
+  },
+  "note": "WLASL is a third camera/signer population; only 203 clips from the Voxel51 copy",
+  "created": "2026-11-14T12:21:18+00:00",
+  "wlasl_heldout": {
+    "top1_popsign_only": 0.5221674876847291,
+    "top1_with_citizen": 0.8423645320197044
+  }
+}

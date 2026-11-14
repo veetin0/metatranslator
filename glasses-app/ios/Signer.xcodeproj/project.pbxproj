@@ -83,7 +83,7 @@
 		8938303C42BF902A3A1AACAA /* MetricsAndConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsAndConfigTests.swift; sourceTree = "<group>"; };
 		8A8830C2377FA354C3925B3A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		99EE6AD8516FF6B04B03A8B1 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
-		9BE8DF688917A69FD49866A7 /* events.example.jsonl */ = {isa = PBXFileReference; path = events.example.jsonl; sourceTree = "<group>"; };
+		9BE8DF688917A69FD49866A7 /* events.example.jsonl */ = {isa = PBXFileReference; lastKnownFileType = text; path = events.example.jsonl; sourceTree = "<group>"; };
 		A9C24B65B105DF1E30997434 /* MockDeviceRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceRepository.swift; sourceTree = "<group>"; };
 		B02BF0E704D31F2D5171E856 /* SpikeMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpikeMetrics.swift; sourceTree = "<group>"; };
 		B1E2B6CEBDF4F8CA77FBF578 /* FramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FramePipeline.swift; sourceTree = "<group>"; };
@@ -93,7 +93,7 @@
 		BF94DF4EC6D035A9BCCADD7D /* CoreEndpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreEndpoints.swift; sourceTree = "<group>"; };
 		C6B272B66670791197E4DAE4 /* CoreEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreEvent.swift; sourceTree = "<group>"; };
 		DF02DF92228FE5E3E47FFA85 /* StreamPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamPlan.swift; sourceTree = "<group>"; };
-		E65FB729799157A47A6A075A /* Signer.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Signer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E65FB729799157A47A6A075A /* Signer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F260668737AF05D848ED036E /* FramePackingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FramePackingTests.swift; sourceTree = "<group>"; };
 		FE2F917A8097F2DF1360F7E5 /* LensCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -312,7 +312,6 @@
 						ProvisioningStyle = Automatic;
 					};
 					CC8149C2CE89019563C76CBE = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -588,6 +587,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signer/Signer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 6N34KWJJ34;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Signer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
@@ -608,6 +608,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signer/Signer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 6N34KWJJ34;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Signer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;

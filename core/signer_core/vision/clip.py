@@ -13,7 +13,7 @@ import numpy as np
 
 from ..contracts import CLIP_KEYS, N_POINTS
 
-SOURCES = ("own", "popsign", "glasses", "webcam", "asl_citizen")
+SOURCES = ("own", "popsign", "glasses", "webcam", "asl_citizen", "wlasl")
 
 
 def _check(xyz, t_ms, fps, gloss, signer, source):

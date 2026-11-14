@@ -63,6 +63,16 @@ def load_citizen(vocab):
     return out
 
 
+def load_wlasl(vocab):
+    """WLASL clips (core/tools/get_wlasl.py); 'signer' is the shard folder, not a person."""
+    out = []
+    for p in sorted(DATA.glob("wlasl/landmarks/*/*.npz")):
+        c = load_clip(p)
+        if c["gloss"] in vocab:
+            out.append((c["xyz"], c["gloss"], "wl:" + c["signer"]))
+    return out
+
+
 def augment(xyz, rng):
     x = np.asarray(xyz, dtype=np.float32).copy()
     if rng.random() < 0.5:
@@ -173,6 +183,8 @@ def main():
     ap.add_argument("--taughtcv", type=int, default=0, help="hold out every n-th taught rep, train on PopSign + the rest")
     ap.add_argument("--weight", type=int, default=12)
     ap.add_argument("--citizen", action="store_true", help="add ASL Citizen clips to every training set")
+    ap.add_argument("--wlasl", action="store_true", help="add WLASL clips to every training set")
+    ap.add_argument("--wlasleval", action="store_true", help="train on PopSign (+Citizen if --citizen), score on all WLASL clips")
     ap.add_argument("--citizencv", type=int, default=0, help="hold out 1 of 5 ASL Citizen batch groups, n runs")
     ap.add_argument("--out", help="write the pooled cv result as eval/results-style JSON")
     ap.add_argument("--aug", type=int, default=4)
@@ -182,6 +194,10 @@ def main():
     classes = sorted(vocab)
     cz = load_citizen(vocab) if (args.citizen or args.citizencv) else []
     extra = cz if args.citizen else []
+    wl = load_wlasl(vocab) if (args.wlasl or args.wlasleval) else []
+    if args.wlasl:
+        extra = extra + wl
+    print(f"{len(wl)} WLASL clips", flush=True)
     print(f"{len(cz)} ASL Citizen clips", flush=True)
     print(f"{len(pop)} PopSign clips, {len(taught)} taught glasses reps, {len(classes)} classes", flush=True)
     pool = Pool(8)
@@ -201,7 +217,7 @@ def main():
         if args.out:
             import datetime, json
             r = score(np.concatenate(allP), ally, classes)
-            r.update(name=Path(args.out).stem, protocol="loso-5fold-signer-disjoint", train_extra="asl_citizen" if extra else None, model="signer_core.model.gru.GRUClassifier",
+            r.update(name=Path(args.out).stem, protocol="loso-5fold-signer-disjoint", train_extra="+".join(n for n, f in (("asl_citizen", args.citizen), ("wlasl", args.wlasl)) if f) or None, model="signer_core.model.gru.GRUClassifier",
                      n_clips=len(ally), n_folds=args.cv, top1_per_fold=None, conf_high=0.8, aug=args.aug, epochs=args.epochs,
                      created=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"))
             Path(args.out).write_text(json.dumps(r, indent=2))
@@ -231,6 +247,20 @@ def main():
             d["citizen_heldout_note"] = "held out by HF batch group (1/5 of batches per run); batches are not signer ids"
             op.write_text(json.dumps(d, indent=2))
             print("wrote", op, d["citizen_heldout"], flush=True)
+    if args.wlasleval:
+        import datetime, json
+        res = {}
+        for name, tr in (("popsign_only", pop), ("popsign_plus_citizen", pop + cz)):
+            if name.endswith("citizen") and not cz:
+                continue
+            X, Y = build(pool, tr, args.aug)
+            net, mean, std = train(X, Y, classes, args.epochs)
+            res[name] = score(predict(net, mean, std, clean(pool, wl)), [c[1] for c in wl], classes)
+            print(f"WLASL eval ({len(wl)} clips) {name}:", res[name], flush=True)
+        if args.out:
+            Path(args.out).write_text(json.dumps({"name": Path(args.out).stem, "protocol": "train on PopSign (+ASL Citizen), test on all WLASL clips (never trained on)",
+                "n_clips": len(wl), "results": res, "note": "WLASL is a third camera/signer population; only 203 clips from the Voxel51 copy",
+                "created": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")}, indent=2))
     if args.taught and taught:
         X, Y = build(pool, pop, args.aug)
         net, mean, std = train(X, Y, classes, args.epochs)

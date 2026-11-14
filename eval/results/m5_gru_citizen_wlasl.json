@@ -1,0 +1,17 @@
+{
+  "top1": 0.9487243621810906,
+  "top3": 0.9854927463731866,
+  "cov@0.8": 0.9052026013006503,
+  "acc@0.8": 0.984249792760431,
+  "name": "m5_gru_citizen_wlasl",
+  "protocol": "loso-5fold-signer-disjoint",
+  "train_extra": "asl_citizen+wlasl",
+  "model": "signer_core.model.gru.GRUClassifier",
+  "n_clips": 7996,
+  "n_folds": 5,
+  "top1_per_fold": null,
+  "conf_high": 0.8,
+  "aug": 4,
+  "epochs": 18,
+  "created": "2026-11-14T12:28:54+00:00"
+}
