@@ -98,9 +98,9 @@ final class MetricsAndConfigTests: XCTestCase {
 
   // MARK: Stream plan
 
-  func testPrimaryPlanIsMediumAtFifteen() {
+  func testPrimaryPlanIsMediumAt24() {
     XCTAssertEqual(StreamPlan.primary.resolution, .medium)
-    XCTAssertEqual(StreamPlan.primary.frameRate, 15)
+    XCTAssertEqual(StreamPlan.primary.frameRate, 24)
     XCTAssertEqual(StreamPlan.primary.expectedSize.w, 504)
     XCTAssertEqual(StreamPlan.primary.expectedSize.h, 896)
   }

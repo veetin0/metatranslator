@@ -28,9 +28,10 @@ struct StreamPlan: Equatable {
   var frameRate: UInt
   var codec: Codec
 
-  /// Default for the spike: medium 504x896 at 15 fps, raw frames (`VideoFrame.makeUIImage()`
-  /// works on raw directly; raw pauses when the app is backgrounded, which is fine here).
-  static let primary = StreamPlan(resolution: .medium, frameRate: 15, codec: .raw)
+  /// Default: medium 504x896 at 24 fps, raw frames (`VideoFrame.makeUIImage()` works on raw
+  /// directly; raw pauses when the app is backgrounded, which is fine here). 24 rather than 15
+  /// gives fast signs more frames; drop to the fallback if the link can't carry it.
+  static let primary = StreamPlan(resolution: .medium, frameRate: 24, codec: .raw)
   /// Fallback when the Bluetooth link cannot carry the primary: low 360x640 at 7 fps.
   static let fallback = StreamPlan(resolution: .low, frameRate: 7, codec: .raw)
 
