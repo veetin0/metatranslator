@@ -10,6 +10,7 @@
   --r:16px;--r-sm:10px;--ease:cubic-bezier(.2,.8,.2,1)
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--color-background);color:var(--color-foreground);font:16px/1.5 var(--sans);min-height:100vh;display:flex;flex-direction:column}
 h1,h2{font-family:var(--head);font-weight:600;margin:0}
 h2{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-muted-foreground);margin-bottom:8px}
