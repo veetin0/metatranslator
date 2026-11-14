@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Signer — ASL to English on the lens</title>
+<style>
+  /* DESIGN.md palette: card tokens for slides, lens tokens for the lens mock-ups. */
+  :root {
+    --primary: #1E40AF; --accent: #16A34A; --destructive: #DC2626; --warn: #B45309;
+    --bg: #EFF6FF; --card: #FFFFFF; --fg: #1E3A8A; --muted: #E9EFF5; --muted-fg: #475569; --border: #BFDBFE;
+    --lens-bg: #000000; --lens-text: #FFFFFF; --lens-unsure: #FFB020; --lens-dim: #9AA4B2; --lens-on: #34D399;
+  }
+  @page { size: 1280px 720px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--fg);
+    font-family: Figtree, "Noto Sans", -apple-system, "SF Pro", Roboto, sans-serif; }
+  .slide { width: 1280px; height: 720px; padding: 64px 80px; position: relative; overflow: hidden;
+    page-break-after: always; break-after: page; display: flex; flex-direction: column; gap: 32px; }
+  .slide:last-child { page-break-after: auto; break-after: auto; }
+  .kicker { font-size: 18px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+  h1 { font-size: 64px; font-weight: 600; line-height: 1.1; }
+  h2 { font-size: 44px; font-weight: 600; line-height: 1.15; max-width: 1000px; }
+  p, li { font-size: 24px; line-height: 1.45; }
+  .muted { color: var(--muted-fg); }
+  ul { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  li { padding-left: 28px; position: relative; }
+  li::before { content: ""; position: absolute; left: 0; top: 14px; width: 12px; height: 4px; background: var(--primary); border-radius: 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 32px; display: flex; justify-content: space-between;
+    font-size: 16px; color: var(--muted-fg); }
+  /* Lens mock-up: additive display, black = transparent */
+  .lens { width: 360px; height: 360px; background: var(--lens-bg); border-radius: 50%; position: relative;
+    font-family: -apple-system, "SF Pro", Roboto, "Noto Sans", sans-serif; flex: none; }
+  .lens .state { position: absolute; top: 78px; left: 70px; font-size: 15px; color: var(--lens-dim); display: flex; align-items: center; gap: 8px; }
+  .lens .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lens-on); }
+  .lens .cap { position: absolute; left: 36px; right: 36px; top: 190px; text-align: center; color: var(--lens-text);
+    font-size: 26px; font-weight: 600; line-height: 1.2; }
+  .lens .sub { position: absolute; left: 0; right: 0; bottom: 70px; text-align: center; color: var(--lens-dim); font-size: 15px; }
+  /* Pipeline */
+  .flow { display: flex; align-items: stretch; gap: 12px; }
+  .step { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .step b { display: block; font-size: 22px; margin-bottom: 8px; }
+  .step span { font-size: 18px; line-height: 1.4; color: var(--muted-fg); display: block; }
+  .arrow { align-self: center; color: var(--primary); font-size: 28px; font-weight: 600; }
+  /* Numbers */
+  .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .num { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+  .num .v { font-size: 64px; font-weight: 600; line-height: 1; color: var(--fg); }
+  .num .l { font-size: 20px; margin-top: 12px; line-height: 1.4; }
+  .num .n { font-size: 16px; margin-top: 10px; color: var(--muted-fg); line-height: 1.4; }
+  .tag { display: inline-block; font-size: 15px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+    border: 1px solid var(--warn); color: var(--warn); margin-top: 12px; }
+  .on { display: inline-flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; color: #14532D; }
+  .on i { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); display: inline-block; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide" style="justify-content:center">
+  <div class="kicker">Junction 2026 · Signer</div>
+  <h1>A Deaf person signs.<br>The person in the glasses reads it.</h1>
+  <p class="muted" style="max-width:900px">ASL to English text and speech, live, on Meta Ray-Ban Display. It works without booking an interpreter or holding a phone between two people.</p>
+  <div class="foot"><span>Signer</span><span>1 / 8</span></div>
+</section>
+
+<!-- 2. Problem -->
+<section class="slide">
+  <div class="kicker">The problem</div>
+  <h2>Everyday conversations have no live translation between ASL and English.</h2>
+  <div class="cols">
+    <ul>
+      <li>Interpreters are booked ahead for big moments, not for asking where the book is or saying thank you.</li>
+      <li>Typing on a phone breaks eye contact and turns a talk into passing notes.</li>
+      <li>The burden of being understood falls on the Deaf person, every time.</li>
+    </ul>
+    <div class="panel">
+      <p><b>Who it is for</b></p>
+      <p class="muted" style="margin-top:12px">A hearing teacher, classmate or desk worker wearing the glasses, and the Deaf signer in front of them, in short everyday exchanges.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Signer</span><span>2 / 8</span></div>
+</section>
+
+<!-- 3. Live demo -->
+<section class="slide">
+  <div class="kicker">Live demo · glasses point of view</div>
+  <h2>The wearer looks at the signer. The words appear on the lens.</h2>
+  <div style="display:flex; gap:56px; align-items:center">
+    <div class="lens" aria-label="Lens mock-up">
+      <div class="state"><span class="dot"></span>Signer ON</div>
+      <div class="cap">Hello. Where is the book?</div>
+      <div class="sub">tap to speak</div>
+    </div>
+    <ul>
+      <li><b>First person:</b> the glasses camera sees what the wearer sees, so nobody holds a phone between them.</li>
+      <li><b>Caption on the lens</b>, white when sure; amber with a "?" when not, and never spoken as if certain.</li>
+      <li><b>Tap to speak:</b> the sentence plays through the glasses speaker.</li>
+      <li>The signer's card shows what was said, with Right / Wrong / Not right.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>Signer</span><span>3 / 8</span></div>
+</section>
+
+<!-- 4. How it works -->
+<section class="slide">
+  <div class="kicker">How it works</div>
+  <h2>The model sees hand and body points, never stored video.</h2>
+  <div class="flow">
+    <div class="step"><b>Consent Start</b><span>The signer taps Start on their card. No camera session before that.</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Holistic landmarks</b><span>Glasses camera → phone → laptop. MediaPipe hand and pose points; the frame is dropped from memory.</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Temporal classifier</b><span>Sign segments classified over time, with a confidence score.</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Captions</b><span>Glosses become an English sentence on the lens and the card.</span></div>
+  </div>
+  <div class="panel" style="display:flex; gap:32px; align-items:center">
+    <span class="on"><i></i>Translation ON — camera in use, nothing recorded</span>
+    <span class="muted" style="font-size:20px">Frames are never stored or sent to a cloud. Stop on the card ends it at once.</span>
+  </div>
+  <div class="foot"><span>Signer</span><span>4 / 8</span></div>
+</section>
+
+<!-- 5. Honest numbers -->
+<section class="slide">
+  <div class="kicker">Honest numbers</div>
+  <h2>Measured on signers the model never saw.</h2>
+  <div class="nums">
+    <div class="num">
+      <div class="v">0.51</div>
+      <div class="l">top-1, kNN baseline</div>
+      <div class="n">Leave-one-signer-out on 7,996 PopSign ASL clips, 20 signs.</div>
+    </div>
+    <div class="num">
+      <div class="v">0.94</div>
+      <div class="l">top-1, BiGRU (top-3: 0.98)</div>
+      <div class="n">One signer-disjoint fold.</div>
+      <span class="tag">Preliminary · one fold</span>
+    </div>
+    <div class="num">
+      <div class="v" style="font-size:40px; line-height:64px">5 reps</div>
+      <div class="l">per sign to teach it</div>
+      <div class="n">Working on the glasses camera after teaching each sign 5 times.</div>
+    </div>
+  </div>
+  <p class="muted" style="font-size:20px">Chance on 20 signs is 1 in 20. The BiGRU has been tested on one fold only; we will quote the full signer-disjoint result once it is measured.</p>
+  <div class="foot"><span>Signer</span><span>5 / 8</span></div>
+</section>
+
+<!-- 6. What we are not + consent -->
+<section class="slide">
+  <div class="kicker">What we are not</div>
+  <h2>Signer covers everyday phrases; it does not replace an interpreter.</h2>
+  <div class="cols">
+    <ul>
+      <li>A small vocabulary of everyday ASL signs, not full ASL grammar.</li>
+      <li>For medical, legal and exams, book an interpreter.</li>
+      <li>When unsure, it says so, or shows "Didn't catch that".</li>
+    </ul>
+    <div class="panel">
+      <p><b>Consent and data</b></p>
+      <ul style="margin-top:14px; gap:10px">
+        <li style="font-size:20px">The signer starts and stops it, from their own card.</li>
+        <li style="font-size:20px">Frames live in memory only; never written, never uploaded.</li>
+        <li style="font-size:20px">No face ID, no signer profile. Taught signs are deleted in one tap.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Signer</span><span>6 / 8</span></div>
+</section>
+
+<!-- 7. How it ships on the glasses -->
+<section class="slide">
+  <div class="kicker">How it ships</div>
+  <h2>A real glasses app, built on Meta's Wearables Device Access Toolkit.</h2>
+  <div class="cols">
+    <ul>
+      <li>iOS app on DAT: one session holds the glasses camera and the display.</li>
+      <li>Caption cards on the 600×600 lens; speech through the glasses speaker.</li>
+      <li>Phone to laptop over USB; captions never leave the local network.</li>
+    </ul>
+    <div class="panel">
+      <p><b>Fallback</b></p>
+      <p class="muted" style="margin-top:12px">The same lens as a Display Web App, testable in Meta's Display Simulator without the glasses.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Signer</span><span>7 / 8</span></div>
+</section>
+
+<!-- 8. Pilot + credit -->
+<section class="slide">
+  <div class="kicker">Next</div>
+  <h2>Pilot: one classroom, one Deaf student, two weeks.</h2>
+  <ul>
+    <li>Grow the vocabulary with Deaf signers, with their consent and credit.</li>
+    <li>Full signer-disjoint evaluation, and a test on new Deaf signers before any claim.</li>
+    <li>Teach-a-sign lets each pair add the words they actually use.</li>
+  </ul>
+  <p class="muted" style="font-size:18px; margin-top:auto">Data: PopSign ASL v1.0, Georgia Tech / Deaf Professional Arts Network (Thad Starner et al.), CC BY 4.0, signdata.cc.gatech.edu. Only landmarks derived from the videos are kept.</p>
+  <div class="foot"><span>Signer</span><span>8 / 8</span></div>
+</section>
+
+</body>
+</html>
