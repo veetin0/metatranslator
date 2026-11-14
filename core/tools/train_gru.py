@@ -130,7 +130,7 @@ def train(X, Y, classes, epochs=18, seed=0):
     import torch.nn.functional as F
 
     torch.manual_seed(seed)
-    dev = "mps" if torch.backends.mps.is_available() else "cpu"
+    dev = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
     mean, std = X.reshape(-1, FEATURE_DIM).mean(0), X.reshape(-1, FEATURE_DIM).std(0) + 1e-3
     Xt = torch.tensor((X - mean) / std, dtype=torch.float32)
     yt = torch.tensor([classes.index(g) for g in Y])

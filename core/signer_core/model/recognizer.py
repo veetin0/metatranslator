@@ -63,6 +63,11 @@ def build_classifier(data_dir: str | None = None, sources=("own", "popsign"), **
     """Fit the kNN on every clip of `sources` under SIGNER_DATA_DIR (default data/), vocabulary glosses only."""
     data_dir = data_dir or os.environ.get("SIGNER_DATA_DIR", "data")
     gru = os.path.join(data_dir, "models", "gru.pt")
+    large = os.path.join(data_dir, "models", "gru_large.pt")  # ~600 glosses, core/tools/train_large.py
+    if os.path.exists(large) and os.environ.get("SIGNER_MODEL") == "gru_large":
+        from .gru import GRUClassifier
+
+        return GRUClassifier(large)
     if os.path.exists(gru) and os.environ.get("SIGNER_MODEL", "gru") == "gru":  # trained by core/tools/train_gru.py
         from .gru import GRUClassifier
 
