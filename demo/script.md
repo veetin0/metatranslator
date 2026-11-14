@@ -24,12 +24,12 @@ caption before the next phrase. If a caption comes back amber ("?"), the wearer 
 | 6 | THANKYOU BYE | Thank you, bye! | 0:57 | 5 s | 5 s | 1:07 |
 | 7 | (signer taps **Stop** on the card) | ON light off; lens goes quiet | 1:07 | — | — | 1:12 |
 
-"Caption + speak" = time for the caption to show, the wearer to tap to speak it, and the phrase to play.
+"Caption + speak" = time for the caption to show, and (when confirmed) the phrase to play automatically.
 The presenter fills 1:12-2:00 with the card (history with the ticks) and the honest-numbers slide.
 
 ## Narration cues (presenter, while the signer signs)
 - 0:00 "The signer taps Start. Nothing is on before they say so."
-- 0:17 "The wearer just looks at the signer. The caption is on the lens; a tap speaks it."
+- 0:17 "The wearer just looks at the signer. The caption is on the lens, and when it's sure, the glasses say it out loud."
 - 0:37 "Frames never leave the laptop's memory; only the words do."
 - 1:07 "The signer taps Stop. It's off."
 

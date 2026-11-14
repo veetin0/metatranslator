@@ -91,12 +91,12 @@
     <div class="lens" aria-label="Lens mock-up">
       <div class="state"><span class="dot"></span>Signer ON</div>
       <div class="cap">Hello. Where is the book?</div>
-      <div class="sub">tap to speak</div>
+      <div class="sub">spoken aloud</div>
     </div>
     <ul>
       <li><b>First person:</b> the glasses camera sees what the wearer sees, so nobody holds a phone between them.</li>
       <li><b>Caption on the lens</b>, white when sure; amber with a "?" when not, and never spoken as if certain.</li>
-      <li><b>Tap to speak:</b> the sentence plays through the glasses speaker.</li>
+      <li><b>Spoken when sure:</b> a confirmed sentence plays through the glasses speaker.</li>
       <li>The signer's card shows what was said, with Right / Wrong / Not right.</li>
     </ul>
   </div>
@@ -134,18 +134,17 @@
       <div class="n">Leave-one-signer-out on 7,996 PopSign ASL clips, 20 signs.</div>
     </div>
     <div class="num">
-      <div class="v">0.94</div>
-      <div class="l">top-1, BiGRU (top-3: 0.98)</div>
-      <div class="n">One signer-disjoint fold.</div>
-      <span class="tag">Preliminary · one fold</span>
+      <div class="v">0.95</div>
+      <div class="l">top-1, BiGRU (top-3: 0.99)</div>
+      <div class="n">5 signer-disjoint folds, same 7,996 clips.</div>
     </div>
     <div class="num">
       <div class="v" style="font-size:40px; line-height:64px">5 reps</div>
       <div class="l">per sign to teach it</div>
-      <div class="n">Working on the glasses camera after teaching each sign 5 times.</div>
+      <div class="n">Taught on the glasses camera; recognised live in our first tests.</div>
     </div>
   </div>
-  <p class="muted" style="font-size:20px">Chance on 20 signs is 1 in 20. The BiGRU has been tested on one fold only; we will quote the full signer-disjoint result once it is measured.</p>
+  <p class="muted" style="font-size:20px">Chance on 20 signs is 1 in 20. PopSign is front-facing phone video; accuracy from the glasses' own view is not yet measured at scale.</p>
   <div class="foot"><span>Signer</span><span>5 / 8</span></div>
 </section>
 
