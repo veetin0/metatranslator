@@ -22,7 +22,7 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "core"))
 
-from signer_core.model.gru import make_model  # noqa: E402
+from signer_core.model.gru import make_model, tta_views  # noqa: E402
 from signer_core.model import KNNClassifier, mirror, read_vocab, trim_active  # noqa: E402
 from signer_core.vision.clip import load_clip  # noqa: E402
 from signer_core.vision.features import FEATURE_DIM, clip_features  # noqa: E402
@@ -125,6 +125,17 @@ def clean(pool, clips):
     return np.stack(pool.map(_clean_job, [c[0] for c in clips], chunksize=64))
 
 
+def _tta_job(xyz):
+    v = tta_views(xyz)
+    return np.stack([clip_features(v[min(i, len(v) - 1)]).astype(np.float32) for i in range(3)])
+
+
+def predict_tta(pool, net, mean, std, clips):
+    """Softmax averaged over signer_core.model.gru.tta_views, as GRUClassifier does with SIGNER_TTA=1."""
+    F = np.stack(pool.map(_tta_job, [c[0] for c in clips], chunksize=64))  # (n, 3, T, D)
+    return np.mean([predict(net, mean, std, F[:, i]) for i in range(F.shape[1])], axis=0)
+
+
 def train(X, Y, classes, epochs=18, seed=0):
     import torch
     import torch.nn.functional as F
@@ -169,6 +180,16 @@ def score(P, y, classes):
             "cov@0.8": float(conf_hi.mean()), "acc@0.8": float(hit[conf_hi].mean()) if conf_hi.any() else float("nan")}
 
 
+def confused_pairs(P, y, classes, n=12):
+    """Most frequent (true -> predicted) errors, with the share of the true gloss's clips."""
+    from collections import Counter
+
+    pred = [classes[i] for i in P.argmax(1)]
+    tot = Counter(y)
+    err = Counter((t, p) for t, p in zip(y, pred) if t != p)
+    return [{"true": t, "pred": p, "n": k, "rate": round(k / tot[t], 3)} for (t, p), k in err.most_common(n)]
+
+
 def folds_of(pop, k):
     signers = sorted({s for _, _, s in pop})
     order = sorted(signers, key=lambda s: hashlib.sha1(f"0:{s}".encode()).hexdigest())
@@ -186,6 +207,7 @@ def main():
     ap.add_argument("--wlasl", action="store_true", help="add WLASL clips to every training set")
     ap.add_argument("--wlasleval", action="store_true", help="train on PopSign (+Citizen if --citizen), score on all WLASL clips")
     ap.add_argument("--citizencv", type=int, default=0, help="hold out 1 of 5 ASL Citizen batch groups, n runs")
+    ap.add_argument("--tta", action="store_true", help="also score test-time crop averaging (SIGNER_TTA) in --cv")
     ap.add_argument("--out", help="write the pooled cv result as eval/results-style JSON")
     ap.add_argument("--aug", type=int, default=4)
     ap.add_argument("--epochs", type=int, default=18)
@@ -204,7 +226,7 @@ def main():
     t0 = time.time()
     if args.cv:
         folds = folds_of(pop, 5)
-        allP, ally = [], []
+        allP, ally, ttaP = [], [], []
         for fi in range(args.cv):
             tr = [c for c in pop if c[2] not in folds[fi]]
             te = [c for c in pop if c[2] in folds[fi]]
@@ -214,9 +236,15 @@ def main():
             allP.append(P); ally += [c[1] for c in te]
             r = score(P, [c[1] for c in te], classes)
             print(f"fold{fi}: GRU {r}  ({time.time() - t0:.0f}s)  [kNN baseline top1 ~0.51]", flush=True)
+            if args.tta:
+                ttaP.append(predict_tta(pool, net, mean, std, te))
+                print(f"fold{fi}: GRU+TTA {score(ttaP[-1], [c[1] for c in te], classes)}", flush=True)
         if args.out:
             import datetime, json
             r = score(np.concatenate(allP), ally, classes)
+            r["confused_pairs"] = confused_pairs(np.concatenate(allP), ally, classes)
+            if ttaP:
+                r["tta"] = score(np.concatenate(ttaP), ally, classes) | {"views": "active clip, -10% start, -10% end"}
             r.update(name=Path(args.out).stem, protocol="loso-5fold-signer-disjoint", train_extra="+".join(n for n, f in (("asl_citizen", args.citizen), ("wlasl", args.wlasl)) if f) or None, model="signer_core.model.gru.GRUClassifier",
                      n_clips=len(ally), n_folds=args.cv, top1_per_fold=None, conf_high=0.8, aug=args.aug, epochs=args.epochs,
                      created=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"))
@@ -272,13 +300,26 @@ def main():
     if args.taughtcv:
         order = {}
         idx = [order.setdefault(g, []).append(i) or len(order[g]) - 1 for i, (_, g, _s) in enumerate(taught)]
+        tP, ty = [], []
         for hold in range(args.taughtcv):
             te = [c for c, k in zip(taught, idx) if k % args.taughtcv == hold]
             trn = [c for c, k in zip(taught, idx) if k % args.taughtcv != hold]
-            X, Y = build(pool, pop + trn, args.aug, seed=2, weight=[1] * len(pop) + [args.weight] * len(trn))
+            X, Y = build(pool, pop + extra + trn, args.aug, seed=2, weight=[1] * len(pop + extra) + [args.weight] * len(trn))
             net, mean, std = train(X, Y, classes, args.epochs)
+            P = predict(net, mean, std, clean(pool, te))
+            tP.append(P); ty += [c[1] for c in te]
             print(f"taught holdout {hold} (n={len(te)}), PopSign + other glasses reps:",
-                  score(predict(net, mean, std, clean(pool, te)), [c[1] for c in te], classes), flush=True)
+                  score(P, [c[1] for c in te], classes), flush=True)
+        if args.out:
+            import datetime, json
+            op = Path(args.out)
+            d = json.loads(op.read_text()) if op.exists() else {}
+            d["glasses_reps_heldout"] = score(np.concatenate(tP), ty, classes) | {
+                "n": len(ty), "glosses": len(set(ty)), "confused_pairs": confused_pairs(np.concatenate(tP), ty, classes),
+                "note": "taught glasses-camera reps held out (every n-th rep per gloss); same people as training, so optimistic"}
+            d.setdefault("created", datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"))
+            op.write_text(json.dumps(d, indent=2))
+            print("wrote", op, d["glasses_reps_heldout"], flush=True)
     if args.final:
         weight = None
         allc = pop + extra + taught

@@ -32,11 +32,23 @@ def make_model(n_cls: int, hidden: int = 128):
     return Net()
 
 
+def tta_views(xyz) -> list:
+    """The active clip plus two crops (10% off the start, 10% off the end): averaging over them makes the prediction
+    less sensitive to where the Segmenter put the boundaries. SIGNER_TTA=1 turns it on (core/tools/train_gru.py --tta)."""
+    a = trim_active(xyz)
+    k = len(a) // 10
+    return [a] if k < 1 else [a, a[k:], a[: len(a) - k]]
+
+
 class GRUClassifier:
     name = "gru"
 
     def __init__(self, path):
+        import os
+
         import torch
+
+        self.tta = os.environ.get("SIGNER_TTA", "0") == "1"
 
         ck = torch.load(path, map_location="cpu", weights_only=False)
         self.net = make_model(len(ck["classes"]))
@@ -64,10 +76,11 @@ class GRUClassifier:
         return self._extra.remove(gloss) if self._extra.labels else 0
 
     def _gru(self, xyz) -> np.ndarray:
-        f = clip_features(trim_active(xyz)).astype(np.float32)
-        x = self._torch.tensor(((f - self.mean) / self.std)[None], dtype=self._torch.float32)
+        views = tta_views(xyz) if self.tta else [trim_active(xyz)]
+        f = np.stack([clip_features(v).astype(np.float32) for v in views])
+        x = self._torch.tensor((f - self.mean) / self.std, dtype=self._torch.float32)
         with self._torch.no_grad():
-            return self._torch.softmax(self.net(x), dim=1)[0].numpy()
+            return self._torch.softmax(self.net(x), dim=1).mean(0).numpy()
 
     def predict_proba(self, xyz) -> dict[str, float]:
         p = dict(zip(self._classes, self._gru(xyz).tolist()))
