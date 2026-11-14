@@ -69,6 +69,11 @@ h2{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--uit-
 .chips{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
 .chips li{padding:4px 12px;border-radius:999px;background:var(--uit-button);font-size:14px;font-weight:500;transition:background .3s,color .3s}
 .chips li.hit{background:var(--uit-green);color:#000}
+.howto{margin:10px 0 4px}
+.howto summary{cursor:pointer;font-weight:600;font-size:15px;padding:4px 0}
+.howto dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 12px;margin:8px 0;font-size:14px;line-height:1.45}
+.howto dt{font-weight:600}
+.howto dd{margin:0;color:var(--uit-text-2)}
 .muted{color:var(--uit-text-2)}.small{font-size:14px}
 .ok{color:var(--ok-text)}.warn{color:var(--warn-text)}
 .foot{padding:12px 24px 20px;max-width:1280px;width:100%;margin:0 auto}
