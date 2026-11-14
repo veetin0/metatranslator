@@ -53,6 +53,16 @@ def load_all():
     return vocab, pop, taught
 
 
+def load_citizen(vocab):
+    """ASL Citizen clips (core/tools/get_asl_citizen.py); 'signer' is the HF batch folder, not a person."""
+    out = []
+    for p in sorted(DATA.glob("asl_citizen/landmarks/*/*.npz")):
+        c = load_clip(p)
+        if c["gloss"] in vocab:
+            out.append((c["xyz"], c["gloss"], "cz:" + c["signer"]))
+    return out
+
+
 def augment(xyz, rng):
     x = np.asarray(xyz, dtype=np.float32).copy()
     if rng.random() < 0.5:
@@ -162,12 +172,17 @@ def main():
     ap.add_argument("--final", action="store_true")
     ap.add_argument("--taughtcv", type=int, default=0, help="hold out every n-th taught rep, train on PopSign + the rest")
     ap.add_argument("--weight", type=int, default=12)
+    ap.add_argument("--citizen", action="store_true", help="add ASL Citizen clips to every training set")
+    ap.add_argument("--citizencv", type=int, default=0, help="hold out 1 of 5 ASL Citizen batch groups, n runs")
     ap.add_argument("--out", help="write the pooled cv result as eval/results-style JSON")
     ap.add_argument("--aug", type=int, default=4)
     ap.add_argument("--epochs", type=int, default=18)
     args = ap.parse_args()
     vocab, pop, taught = load_all()
     classes = sorted(vocab)
+    cz = load_citizen(vocab) if (args.citizen or args.citizencv) else []
+    extra = cz if args.citizen else []
+    print(f"{len(cz)} ASL Citizen clips", flush=True)
     print(f"{len(pop)} PopSign clips, {len(taught)} taught glasses reps, {len(classes)} classes", flush=True)
     pool = Pool(8)
     t0 = time.time()
@@ -177,7 +192,7 @@ def main():
         for fi in range(args.cv):
             tr = [c for c in pop if c[2] not in folds[fi]]
             te = [c for c in pop if c[2] in folds[fi]]
-            X, Y = build(pool, tr, args.aug)
+            X, Y = build(pool, tr + extra, args.aug)
             net, mean, std = train(X, Y, classes, args.epochs)
             P = predict(net, mean, std, clean(pool, te))
             allP.append(P); ally += [c[1] for c in te]
@@ -186,11 +201,36 @@ def main():
         if args.out:
             import datetime, json
             r = score(np.concatenate(allP), ally, classes)
-            r.update(name=Path(args.out).stem, protocol="loso-5fold-signer-disjoint", model="signer_core.model.gru.GRUClassifier",
+            r.update(name=Path(args.out).stem, protocol="loso-5fold-signer-disjoint", train_extra="asl_citizen" if extra else None, model="signer_core.model.gru.GRUClassifier",
                      n_clips=len(ally), n_folds=args.cv, top1_per_fold=None, conf_high=0.8, aug=args.aug, epochs=args.epochs,
                      created=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"))
             Path(args.out).write_text(json.dumps(r, indent=2))
             print("wrote", args.out, r, flush=True)
+    if args.citizencv:
+        groups = folds_of(cz, 5)
+        res = {}
+        for hold in range(args.citizencv):
+            te = [c for c in cz if c[2] in groups[hold]]
+            trc = [c for c in cz if c[2] not in groups[hold]]
+            yt = [c[1] for c in te]
+            Xte = clean(pool, te)
+            for name, tr in (("popsign_only", pop), ("with_citizen", pop + trc)):
+                X, Y = build(pool, tr, args.aug, seed=3)
+                net, mean, std = train(X, Y, classes, args.epochs)
+                r = score(predict(net, mean, std, Xte), yt, classes)
+                r["n"] = len(te)
+                res.setdefault(name, []).append(r)
+                print(f"citizen holdout {hold} (n={len(te)}) {name}: {r}", flush=True)
+        if args.out:
+            import json
+            op = Path(args.out)
+            d = json.loads(op.read_text()) if op.exists() else {}
+            d["citizen_heldout"] = {k: {m: float(np.average([r[m] for r in v], weights=[r["n"] for r in v]))
+                                        for m in ("top1", "top3")} | {"n": sum(r["n"] for r in v)}
+                                    for k, v in res.items()}
+            d["citizen_heldout_note"] = "held out by HF batch group (1/5 of batches per run); batches are not signer ids"
+            op.write_text(json.dumps(d, indent=2))
+            print("wrote", op, d["citizen_heldout"], flush=True)
     if args.taught and taught:
         X, Y = build(pool, pop, args.aug)
         net, mean, std = train(X, Y, classes, args.epochs)
@@ -211,8 +251,8 @@ def main():
                   score(predict(net, mean, std, clean(pool, te)), [c[1] for c in te], classes), flush=True)
     if args.final:
         weight = None
-        allc = pop + taught
-        weight = [1] * len(pop) + [args.weight] * len(taught)  # glasses reps count 12x: the stage view matters most
+        allc = pop + extra + taught
+        weight = [1] * len(pop + extra) + [args.weight] * len(taught)  # glasses reps count 12x: the stage view matters most
         X, Y = build(pool, allc, args.aug, seed=1, weight=weight)
         net, mean, std = train(X, Y, classes, args.epochs)
         import torch
