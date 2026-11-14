@@ -162,6 +162,7 @@ def main():
     ap.add_argument("--final", action="store_true")
     ap.add_argument("--taughtcv", type=int, default=0, help="hold out every n-th taught rep, train on PopSign + the rest")
     ap.add_argument("--weight", type=int, default=12)
+    ap.add_argument("--out", help="write the pooled cv result as eval/results-style JSON")
     ap.add_argument("--aug", type=int, default=4)
     ap.add_argument("--epochs", type=int, default=18)
     args = ap.parse_args()
@@ -172,13 +173,24 @@ def main():
     t0 = time.time()
     if args.cv:
         folds = folds_of(pop, 5)
+        allP, ally = [], []
         for fi in range(args.cv):
             tr = [c for c in pop if c[2] not in folds[fi]]
             te = [c for c in pop if c[2] in folds[fi]]
             X, Y = build(pool, tr, args.aug)
             net, mean, std = train(X, Y, classes, args.epochs)
-            r = score(predict(net, mean, std, clean(pool, te)), [c[1] for c in te], classes)
+            P = predict(net, mean, std, clean(pool, te))
+            allP.append(P); ally += [c[1] for c in te]
+            r = score(P, [c[1] for c in te], classes)
             print(f"fold{fi}: GRU {r}  ({time.time() - t0:.0f}s)  [kNN baseline top1 ~0.51]", flush=True)
+        if args.out:
+            import datetime, json
+            r = score(np.concatenate(allP), ally, classes)
+            r.update(name=Path(args.out).stem, protocol="loso-5fold-signer-disjoint", model="signer_core.model.gru.GRUClassifier",
+                     n_clips=len(ally), n_folds=args.cv, top1_per_fold=None, conf_high=0.8, aug=args.aug, epochs=args.epochs,
+                     created=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"))
+            Path(args.out).write_text(json.dumps(r, indent=2))
+            print("wrote", args.out, r, flush=True)
     if args.taught and taught:
         X, Y = build(pool, pop, args.aug)
         net, mean, std = train(X, Y, classes, args.epochs)

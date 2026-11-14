@@ -1,0 +1,16 @@
+{
+  "top1": 0.948224112056028,
+  "top3": 0.9856178089044523,
+  "cov@0.8": 0.8988244122061031,
+  "acc@0.8": 0.9834423264227077,
+  "name": "m3c_gru",
+  "protocol": "loso-5fold-signer-disjoint",
+  "model": "signer_core.model.gru.GRUClassifier",
+  "n_clips": 7996,
+  "n_folds": 5,
+  "top1_per_fold": null,
+  "conf_high": 0.8,
+  "aug": 4,
+  "epochs": 18,
+  "created": "2026-11-14T11:11:09+00:00"
+}

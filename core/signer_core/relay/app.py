@@ -140,6 +140,7 @@ class Relay:
                 log.warning("model not loaded: %s", e)
                 return
             self.pipeline.set_classifier(clf)
+            self.model_name = getattr(clf, "name", self.model_name)
             self.model_error = None
             log.info("model %s fitted: %d classes", self.model_name, len(clf.classes))
 
