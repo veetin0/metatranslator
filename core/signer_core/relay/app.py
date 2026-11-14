@@ -250,6 +250,7 @@ def pose_points(f75) -> list:
 
 def create_app(classifier=None, landmarker=None, data_dir: str | None = None, card_dir: str | None = None,
                idle_stop_s: float | None = None, phrase_gap_ms: int = 1200, clock=time.monotonic) -> FastAPI:
+    phrase_gap_ms = int(os.environ.get("SIGNER_PHRASE_GAP_MS", phrase_gap_ms))  # rest that closes a sentence; lower = captions sooner
     relay = Relay(classifier, landmarker, data_dir, idle_stop_s, phrase_gap_ms, clock)
 
     async def lifespan(app):
@@ -339,7 +340,7 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
             await ws.close(code=CLOSE_CONSENT, reason="consent_required")
             return
         relay.frame_sockets.add(ws)
-        n = 0
+        n = dropped = 0
         try:
             while True:
                 msg = await ws.receive()
@@ -361,6 +362,11 @@ def create_app(classifier=None, landmarker=None, data_dir: str | None = None, ca
                 if n % ACK_EVERY == 0:
                     await ws.send_text(json.dumps({"type": "ack", "seq": header.get("seq", n)}))
                 ok = relay.frame_age_ok(int(header.get("ts_ms", 0)))
+                dropped += not ok
+                if os.environ.get("SIGNER_DEBUG_FRAMES") and n % 30 == 0 and relay._ages:
+                    ages = sorted(a for _, a in relay._ages)
+                    log.info("debug link received=%d dropped=%d age median=%dms max=%dms", n, dropped,
+                             ages[len(ages) // 2], ages[-1])
                 if relay.link_changed():
                     await relay.hub.broadcast(relay.state_event())
                 if not ok:
