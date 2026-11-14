@@ -118,10 +118,23 @@ def combo_ok(gloss: list[str]) -> bool:
     return len(core) <= 1 or _match(core) is not None or _wh(core, ENGLISH) is not None
 
 
+SURE_JOINT = 0.80  # an unmatched combination is kept only when P(every sign read right) is at least this
+
+
+def joint(conf: list[float]) -> float:
+    """Chance that every sign in the run was recognised correctly (product of the per-sign confidences)."""
+    p = 1.0
+    for c in conf:
+        p *= c
+    return p
+
+
 def best_valid_run(gloss: list[str], conf: list[float]) -> tuple[int, int]:
-    """Indices [i, j) of the contiguous run of signs to keep: the whole thing when combo_ok, else the longest sensible
-    sub-run (ties: highest total confidence). Always at least one sign."""
-    if combo_ok(gloss):
+    """Indices [i, j) of the contiguous run of signs to keep. The whole thing when combo_ok, or when the model is sure
+    of every sign (joint >= SURE_JOINT: 'HAPPY WATER' at 95% + 92% is shown as signed). Otherwise an unsure nonsense
+    join is cut to the longest sensible sub-run (ties: highest total confidence), so 'HAPPY WATER' at 90% + 60%
+    becomes 'Happy'. Never substitutes a sign that was not the recogniser's top guess. Always at least one sign."""
+    if combo_ok(gloss) or joint(conf) >= SURE_JOINT:
         return 0, len(gloss)
     best, key = (0, 1), (0, -1.0)
     for i in range(len(gloss)):

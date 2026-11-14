@@ -135,16 +135,20 @@ function draw(now) {
 }
 
 const pct = c => Math.round(c * 100) + "%";
-const TIER = {confirmed: "✓ Sure", unsure: "? Not sure", none: "Didn't catch that"};
+const TIER = {confirmed: "✓ Sure", unsure: "? Not sure", none: "Low confidence, not used in the translation"};
+const CAPTION_MS = 2000;  // a translated phrase stays on the lens and the Translation card this long
+let captionTimer;
 function onEvent(e) {
   if (e.type === "partial") {
+    // every guess is shown here, even under 50%; the phrase builder still leaves "none" signs out of the translation
     const g = $("gloss");
-    const seen = e.top.filter(([, c]) => c >= CONF_LOW);  // confidence gate: nothing under 50% is shown
-    g.textContent = e.tier === "none" ? "…" : e.gloss; g.classList.remove("pop", "placeholder"); void g.offsetWidth; g.classList.add("pop");
+    g.textContent = e.gloss; g.classList.remove("pop", "placeholder"); void g.offsetWidth; g.classList.add("pop");
+    g.classList.toggle("low", e.tier === "none");
     $("tier").className = "tier " + e.tier;
-    $("tier").textContent = e.tier === "none" ? TIER.none : `${TIER[e.tier]} · ${pct(e.confidence)}`;
-    $("bars").replaceChildren(...seen.map(([gl, c]) => {
+    $("tier").textContent = `${TIER[e.tier]} · ${pct(e.confidence)}`;
+    $("bars").replaceChildren(...e.top.map(([gl, c]) => {
       const li = document.createElement("li");
+      if (c < CONF_LOW) li.className = "low";
       li.innerHTML = `<span></span><span class="track"><span class="fill"></span></span><span class="pct">${pct(c)}</span>`;
       li.firstChild.textContent = gl;
       requestAnimationFrame(() => li.querySelector(".fill").style.width = pct(c));
@@ -165,6 +169,11 @@ function onEvent(e) {
       li.lastChild.textContent = `${e.tier === "confirmed" ? "✓" : "?"} ${pct(e.confidence)}`;
       $("history").prepend(li);
     }
+    clearTimeout(captionTimer);
+    captionTimer = setTimeout(() => {
+      $("lens-cap").replaceChildren();
+      c.textContent = "Your sentence appears here after a short pause."; c.classList.add("placeholder");
+    }, CAPTION_MS);
     if (e.speak && $("speak").checked && "speechSynthesis" in window) speechSynthesis.speak(new SpeechSynthesisUtterance(e.text));
   }
 }

@@ -35,7 +35,8 @@ for (const [g, want] of [[["HELLO", "QUESTION"], "Hello, can I ask a question?"]
 }
 for (const [g, ok] of [[["WATER"], true], [["HELLO", "WATER", "PLEASE"], true], [["WHERE", "BOOK"], true], [["HAPPY", "WATER"], false],
   [["BYE", "HELLO"], false], [["TALK", "LISTEN", "PLEASE"], false]]) if (comboOk(g) !== ok) { fail++; console.log("FAIL comboOk", g, ok); }
-for (const [g, c, want] of [[["HAPPY", "WATER"], [0.9, 0.6], [0, 1]], [["HAPPY", "WATER"], [0.6, 0.9], [1, 2]], [["HAPPY", "WATER", "PLEASE"], [0.9, 0.7, 0.7], [1, 3]]])
+for (const [g, c, want] of [[["HAPPY", "WATER"], [0.9, 0.6], [0, 1]], [["HAPPY", "WATER"], [0.6, 0.9], [1, 2]], [["HAPPY", "WATER", "PLEASE"], [0.9, 0.7, 0.7], [1, 3]],
+  [["HAPPY", "WATER"], [0.95, 0.92], [0, 2]], [["HAPPY", "WATER"], [0.85, 0.85], [0, 1]]])
   if (bestValidRun(g, c).join() !== want.join()) { fail++; console.log("FAIL bestValidRun", g, c, want); }
 console.log(fail ? `${fail} failures` : "ok", "- worst probability diff", worst.toExponential(2));
 process.exit(fail ? 1 : 0);

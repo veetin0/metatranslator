@@ -58,6 +58,8 @@ h2{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--uit-
 .bars .track{height:10px;border-radius:5px;background:var(--uit-track);overflow:hidden}
 .bars .fill{height:100%;border-radius:5px;background:#fff;transition:width .4s var(--ease)}
 .bars li:not(:first-child) .fill{background:#ffffff80}
+.gloss.low{color:var(--uit-text-2)}
+.bars li.low{color:var(--uit-text-2)}.bars li.low .fill{background:#8a8d94}
 .bars .pct{text-align:right;font-variant-numeric:tabular-nums;color:var(--uit-text-2)}
 .caption{font-size:24px;line-height:1.35;margin:0 0 8px;min-height:64px}
 .caption.placeholder{font-size:16px;color:var(--uit-text-2)}

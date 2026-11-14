@@ -175,6 +175,10 @@ def test_phrase_tiers_alternatives_and_none():
     assert c["alternatives"] == [{"text": "Where is the water?", "gloss": ["WHERE", "WATER"], "confidence": 0.5}]
     c = pb.caption([pred("HAPPY", 0.90), pred("WATER", 0.60)], "c2c")  # nonsense pair: keep the stronger sign only
     assert c["gloss"] == ["HAPPY"] and c["dropped"] == ["WATER"] and c["tier"] == "unsure" and not c["speak"]
+    c = pb.caption([pred("HAPPY", 0.95), pred("WATER", 0.92)], "c2e")  # model sure of both: shown as signed
+    assert c["gloss"] == ["HAPPY", "WATER"] and c["dropped"] == [] and c["tier"] == "confirmed" and c["speak"]
+    c = pb.caption([pred("HAPPY", 0.90), pred("WATER", 0.40)], "c2f")  # under 50%: never part of the translation
+    assert c["gloss"] == ["HAPPY"]
     c = pb.caption([pred("WATER", 0.90), pred("PLEASE", 0.85)], "c2d")  # sensible pair stays whole
     assert c["gloss"] == ["WATER", "PLEASE"] and c["dropped"] == [] and c["speak"]
     c = pb.caption([pred("HELLO", 0.9), pred("QUESTION", 0.86)], "c1")

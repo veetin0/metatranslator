@@ -93,3 +93,7 @@ def test_best_valid_run_drops_nonsense_and_keeps_the_stronger_sign():
     assert best_valid_run(["HAPPY", "WATER"], [0.60, 0.90]) == (1, 2)
     assert best_valid_run(["WATER", "PLEASE"], [0.6, 0.6]) == (0, 2)
     assert best_valid_run(["HAPPY", "WATER", "PLEASE"], [0.9, 0.7, 0.7]) == (1, 3)
+    # the model is sure of every sign (joint 0.874 >= 0.80): an unusual phrase is shown as signed
+    assert best_valid_run(["HAPPY", "WATER"], [0.95, 0.92]) == (0, 2)
+    # both "sure" on their own, but joint 0.72 < 0.80: still cut
+    assert best_valid_run(["HAPPY", "WATER"], [0.85, 0.85]) == (0, 1)

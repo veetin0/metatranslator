@@ -264,8 +264,12 @@ export function comboOk(gloss) {
   while (g.length > 1 && ["THANKYOU", "BYE", "PLEASE"].includes(g[g.length - 1])) g.pop();
   return g.length <= 1 || match(g) !== null || wh(g) !== null;
 }
+// an unmatched combination is kept whole only when the model is sure of every sign (joint probability >= SURE_JOINT);
+// an unsure nonsense join is cut to the longest sensible run, never patched with a sign that wasn't the top guess
+export const SURE_JOINT = 0.80;
+export const joint = conf => conf.reduce((a, b) => a * b, 1);
 export function bestValidRun(gloss, conf) {
-  if (comboOk(gloss)) return [0, gloss.length];
+  if (comboOk(gloss) || joint(conf) >= SURE_JOINT) return [0, gloss.length];
   let best = [0, 1], key = [0, -1];
   for (let i = 0; i < gloss.length; i++) for (let j = i + 1; j <= gloss.length; j++) {
     const sum = conf.slice(i, j).reduce((a, b) => a + b, 0);

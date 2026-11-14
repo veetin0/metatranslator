@@ -7,6 +7,7 @@ import { STATE_LABEL, ALERT, coreUrl, initial, reduce, speakText, wrap } from ".
 import "./lens.css";
 
 const url = coreUrl(location.search);
+const CAPTION_MS = 2000; // a translated phrase stays on the lens this long
 const PAINT_MS = 500; // DESIGN: updates throttled >= 500 ms (matches the DAT card)
 
 function useCore() {
@@ -35,6 +36,8 @@ function useCore() {
           const ev = JSON.parse(m.data);
           dispatch(ev); // before speech: a TTS failure must never cost the caption
           say(ev);
+          // clear the phrase after CAPTION_MS; a newer caption has another id, so the retract leaves it alone
+          if (ev.type === "caption") setTimeout(() => dispatch({ type: "retract", id: ev.id }), CAPTION_MS);
         } catch {
           /* ignore non-JSON */
         }
